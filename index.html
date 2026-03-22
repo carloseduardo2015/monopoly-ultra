@@ -3,192 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monopoly Brasil Elite</title>
+    <title>Monopoly Brasil Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0f172a; --panel: #1e293b; --gold: #fbbf24;
-            --board-bg: #bfdbfe; --white: #ffffff;
+            --board-green: #cde6d0; --white: #ffffff;
+            --success: #22c55e; --danger: #ef4444;
         }
         * { box-sizing: border-box; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
         /* Setup Screen */
-        #setup-screen {
-            position: fixed; inset: 0; background: var(--bg); z-index: 2000;
-            display: flex; flex-direction: column; padding: 20px; align-items: center; justify-content: center;
-        }
-        .setup-card { background: var(--panel); padding: 25px; border-radius: 24px; width: 100%; max-width: 450px; border: 1px solid rgba(255,255,255,0.1); }
-        .player-row { display: flex; gap: 10px; margin-bottom: 12px; }
-        input, select { background: #334155; border: 1px solid #475569; color: white; padding: 12px; border-radius: 10px; flex: 1; }
+        #setup-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .setup-card { background: var(--panel); padding: 25px; border-radius: 24px; width: 100%; max-width: 450px; border: 2px solid var(--gold); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .setup-list { max-height: 300px; overflow-y: auto; margin: 15px 0; padding-right: 5px; }
+        .player-input { display: flex; gap: 8px; margin-bottom: 10px; background: #334155; padding: 8px; border-radius: 12px; }
+        
+        /* Game Board Area */
+        .game-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        #board-wrapper { position: relative; width: 95vw; height: 95vw; max-width: 500px; max-height: 500px; background: #222; padding: 4px; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        #board { display: grid; width: 100%; height: 100%; grid-template-columns: 1.4fr repeat(9, 1fr) 1.4fr; grid-template-rows: 1.4fr repeat(9, 1fr) 1.4fr; background: #000; gap: 1px; }
 
-        /* Game Board */
-        .game-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 5px; }
-        .board-container { position: relative; width: 98vw; height: 98vw; max-width: 550px; max-height: 550px; }
-        #board { 
-            display: grid; width: 100%; height: 100%; 
-            grid-template-columns: 1.4fr repeat(9, 1fr) 1.4fr; 
-            grid-template-rows: 1.4fr repeat(9, 1fr) 1.4fr; 
-            background: #000; gap: 1px; border: 4px solid #000;
-        }
+        /* Tile Styling */
+        .tile { background: #f8fafc; position: relative; display: flex; flex-direction: column; color: #000; font-size: 6px; overflow: hidden; }
+        .t-color { height: 20%; width: 100%; border-bottom: 1px solid #000; }
+        .t-info { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 1px; font-weight: 700; text-transform: uppercase; }
+        .t-price { font-size: 5px; font-weight: 900; margin-bottom: 2px; }
 
-        .tile { background: #fff; position: relative; display: flex; flex-direction: column; color: #000; overflow: hidden; }
-        .t-color { height: 22%; width: 100%; border-bottom: 1px solid #000; }
-        .t-name { font-size: 6px; font-weight: 900; text-align: center; text-transform: uppercase; flex: 1; display: flex; align-items: center; justify-content: center; padding: 2px; }
-        .t-price { font-size: 5px; text-align: center; padding-bottom: 2px; }
-        .house-container { position: absolute; top: 2px; right: 2px; display: flex; gap: 1px; }
-        .house { width: 4px; height: 4px; background: #2ecc71; border-radius: 1px; }
-        .hotel { width: 6px; height: 6px; background: #e74c3c; border-radius: 1px; }
+        /* Game Elements */
+        .pawn { position: absolute; width: 16px; height: 16px; z-index: 100; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); font-size: 14px; }
+        .build-area { position: absolute; top: 0; left: 0; width: 100%; display: flex; justify-content: center; gap: 1px; padding: 1px; pointer-events: none; }
+        .h-house { width: 4px; height: 4px; background: #15803d; border: 0.5px solid #052e16; }
+        .h-hotel { width: 8px; height: 6px; background: #b91c1c; border: 0.5px solid #450a0a; }
 
-        /* Pawns */
-        .pawn { 
-            position: absolute; width: 18px; height: 18px; z-index: 100; 
-            transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            display: flex; align-items: center; justify-content: center; font-size: 14px;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
-        }
+        /* UI Hud */
+        #hud { display: flex; gap: 8px; padding: 10px; overflow-x: auto; background: #0f172a; border-bottom: 1px solid #334155; }
+        .player-chip { min-width: 110px; background: #1e293b; padding: 8px; border-radius: 14px; border: 2px solid transparent; transition: 0.3s; position: relative; }
+        .player-chip.active { border-color: var(--gold); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3); }
+        .money-text { color: #4ade80; font-weight: 900; font-size: 14px; }
+        .jail-badge { position: absolute; top: -5px; right: -5px; background: #ef4444; font-size: 8px; padding: 2px 4px; border-radius: 4px; }
 
-        /* UI Controls */
-        #status-bar { display: flex; gap: 8px; padding: 10px; overflow-x: auto; background: rgba(0,0,0,0.3); }
-        .player-tab { min-width: 110px; padding: 10px; background: var(--panel); border-radius: 14px; border: 2px solid transparent; flex-shrink: 0; }
-        .player-tab.active { border-color: var(--gold); transform: scale(1.05); }
-        .mny { color: #2ecc71; font-weight: 900; font-size: 14px; }
+        /* Controls */
+        .controls { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 10px; padding: 15px; background: #1e293b; }
+        .btn { padding: 12px; border-radius: 12px; border: none; font-weight: 900; color: white; text-transform: uppercase; transition: 0.2s; }
+        .btn:active { transform: scale(0.95); }
+        .btn-roll { background: linear-gradient(to bottom, #fbbf24, #d97706); color: #000; font-size: 18px; }
+        .btn-util { background: #475569; font-size: 10px; }
 
-        .controls { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 10px; padding: 15px; background: var(--panel); }
-        .btn { padding: 15px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; }
-        .btn-roll { background: var(--gold); color: #000; font-size: 18px; box-shadow: 0 4px 0 #b45309; }
-        .btn-sec { background: #475569; color: white; font-size: 11px; }
+        /* Dice */
+        .dice-container { display: flex; gap: 10px; margin-bottom: 10px; }
+        .die { width: 40px; height: 40px; background: white; color: black; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 0 #cbd5e1; }
 
-        /* Modals */
+        /* Modal */
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; z-index: 1000; backdrop-filter: blur(5px); }
-        .modal { 
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 85%; max-width: 350px; background: white; color: #000; 
-            border-radius: 24px; padding: 25px; display: none; z-index: 1001; text-align: center;
-        }
-        .btn-modal { width: 100%; padding: 14px; margin-top: 8px; border-radius: 10px; border: none; font-weight: 900; color: white; }
-
-        .dice-box { font-size: 40px; margin: 10px; transition: transform 0.2s; }
-        .mortgaged { opacity: 0.5; background: #ddd !important; }
-        .mortgaged::after { content: "HIPOTECADO"; position: absolute; font-size: 5px; color: red; bottom: 2px; width: 100%; text-align: center; }
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 380px; background: #f8fafc; color: #0f172a; border-radius: 28px; padding: 25px; display: none; z-index: 1001; text-align: center; }
+        .card-luck { border-top: 15px solid #f97316; }
+        .card-chest { border-top: 15px solid #3b82f6; }
     </style>
 </head>
 <body>
 
 <div id="setup-screen">
     <div class="setup-card">
-        <h1 style="text-align: center; color: var(--gold); margin-top:0;">MONOPOLY BRASIL</h1>
-        <div style="margin-bottom: 15px;">
-            <label style="font-size: 12px; opacity: 0.8;">Jogadores (2-6):</label>
-            <select id="qt-players" onchange="createSetupFields()" style="width:100%; margin-top:5px;">
-                <option value="2">2 Jogadores</option>
-                <option value="3">3 Jogadores</option>
-                <option value="4">4 Jogadores</option>
-                <option value="5">5 Jogadores</option>
-                <option value="6">6 Jogadores</option>
-            </select>
-        </div>
-        <div id="player-setup-list"></div>
-        <button class="btn btn-roll" style="width:100%;" onclick="initGame()">COMEÇAR JOGO</button>
+        <h1 style="text-align:center; color:var(--gold); margin:0 0 20px 0; font-size: 24px;">MONOPOLY BRASIL</h1>
+        <label>Quantidade de Jogadores (2-8):</label>
+        <input type="number" id="p-count" min="2" max="8" value="2" onchange="initSetup()" style="width:100%; padding:10px; border-radius:8px; margin: 10px 0;">
+        <div id="setup-list" class="setup-list"></div>
+        <button class="btn btn-roll" style="width:100%" onclick="startGame()">INICIAR PARTIDA</button>
     </div>
 </div>
 
-<div id="status-bar"></div>
+<div id="hud"></div>
 
-<div class="game-area">
-    <div class="board-container">
+<div class="game-container">
+    <div id="board-wrapper">
         <div id="board">
-            <div style="grid-column: 2/11; grid-row: 2/11; background: var(--board-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
-                <h2 style="color:#000; margin:0; letter-spacing: 2px;">MONOPOLY</h2>
-                <div style="display: flex; gap: 20px;">
-                    <div id="d1" class="dice-box">⚀</div>
-                    <div id="d2" class="dice-box">⚀</div>
+            <div style="grid-area: 2/2/11/11; background: var(--board-green); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border: 1px solid #a3b8a5;">
+                <div class="dice-container">
+                    <div id="die1" class="die">⚀</div>
+                    <div id="die2" class="die">⚀</div>
                 </div>
-                <div id="msg-box" style="color:#334155; font-weight:700; font-size:12px; text-align:center; padding: 0 10px;">Vez do Jogador 1</div>
+                <div id="game-status" style="color:#1e293b; font-weight:900; font-size:14px; text-align:center; padding: 0 20px;">AGUARDANDO JOGADA</div>
             </div>
         </div>
-        <div id="pawns-layer"></div>
     </div>
 </div>
 
 <div class="controls">
-    <button class="btn btn-sec" onclick="openPropMenu()">IMÓVEIS / HIPOTECA</button>
-    <button class="btn btn-roll" id="roll-btn" onclick="executeRoll()">GIRAR</button>
-    <button class="btn btn-sec" onclick="showHistory()">HISTÓRICO</button>
+    <button class="btn btn-util" onclick="showAssets()">MEUS BENS</button>
+    <button class="btn btn-roll" id="roll-btn" onclick="handleRoll()">JOGAR DADOS</button>
+    <button class="btn btn-util" onclick="showHistory()">HISTÓRICO</button>
 </div>
 
 <div id="overlay"></div>
 <div class="modal" id="modal">
-    <h3 id="m-title" style="margin-top:0"></h3>
-    <div id="m-body" style="margin-bottom:20px; font-size: 14px; max-height: 250px; overflow-y: auto;"></div>
+    <h2 id="m-title" style="margin-top:0"></h2>
+    <div id="m-body" style="margin: 20px 0; font-size:16px; line-height:1.5;"></div>
     <div id="m-footer"></div>
 </div>
 
 <script>
-    // --- DATABASE MODO BRASIL ---
+    // --- DATABASE DO JOGO (Fiel ao Monopoly Brasil) ---
     const TILES = [
-        {n: "PARTIDA", type: "special"}, {n: "AV. SUMARÉ", type: "prop", g: "marrom", p: 60, r: [2,10,30,90,160,250], h: 50},
-        {n: "COFRE", type: "chest"}, {n: "AV. SÃO JOÃO", type: "prop", g: "marrom", p: 60, r: [4,20,60,180,320,450], h: 50},
-        {n: "IMP. RENDA", type: "tax", val: 200}, {n: "EST. MARACANÃ", type: "station", p: 200},
-        {n: "RUA 25 MARÇO", type: "prop", g: "azulclaro", p: 100, r: [6,30,90,270,400,550], h: 50}, {n: "SORTE", type: "luck"},
-        {n: "AV. PAULISTA", type: "prop", g: "azulclaro", p: 100, r: [6,30,90,270,400,550], h: 50}, {n: "AV. V. SOUTO", type: "prop", g: "azulclaro", p: 120, r: [8,40,100,300,450,600], h: 50},
-        {n: "PRISÃO", type: "jail"}, {n: "AV. ATLÂNTICA", type: "prop", g: "rosa", p: 140, r: [10,50,150,450,625,750], h: 100},
-        {n: "CIA ELÉTRICA", type: "util", p: 150, icon: "💡"}, {n: "AV. NITEROI", type: "prop", g: "rosa", p: 140, r: [10,50,150,450,625,750], h: 100},
-        {n: "AV. JK", type: "prop", g: "rosa", p: 160, r: [12,60,180,500,700,900], h: 100}, {n: "EST. CARIOCA", type: "station", p: 200},
-        {n: "AV. BERRINI", type: "prop", g: "laranja", p: 180, r: [14,70,200,550,750,950], h: 100}, {n: "COFRE", type: "chest"},
-        {n: "AV. F. LIMA", type: "prop", g: "laranja", p: 180, r: [14,70,200,550,750,950], h: 100}, {n: "AV. 9 JULHO", type: "prop", g: "laranja", p: 200, r: [16,80,220,600,800,1000], h: 100},
-        {n: "ESTAC. GRÁTIS", type: "special"}, {n: "AV. EUROPA", type: "prop", g: "vermelho", p: 220, r: [18,90,250,700,875,1050], h: 150},
-        {n: "SORTE", type: "luck"}, {n: "AV. AUGUSTA", type: "prop", g: "vermelho", p: 220, r: [18,90,250,700,875,1050], h: 150},
-        {n: "AV. PACAEMBU", type: "prop", g: "vermelho", p: 240, r: [20,100,300,750,925,1100], h: 150}, {n: "EST. CONSOLAÇÃO", type: "station", p: 200},
-        {n: "INTERLAGOS", type: "prop", g: "amarelo", p: 260, r: [22,110,330,800,975,1150], h: 150}, {n: "MORUMBI", type: "prop", g: "amarelo", p: 260, r: [22,110,330,800,975,1150], h: 150},
-        {n: "CIA ÁGUA", type: "util", p: 150, icon: "🚰"}, {n: "IBIRAPUERA", type: "prop", g: "amarelo", p: 280, r: [24,120,360,850,1025,1200], h: 150},
-        {n: "VÁ PRESO", type: "gojail"}, {n: "B. TIJUCA", type: "prop", g: "verde", p: 300, r: [26,130,390,900,1100,1275], h: 200},
-        {n: "JARDIM BOTÂNICO", type: "prop", g: "verde", p: 300, r: [26,130,390,900,1100,1275], h: 200}, {n: "COFRE", type: "chest"},
-        {n: "IPANEMA", type: "prop", g: "verde", p: 320, r: [28,150,450,1000,1200,1400], h: 200}, {n: "EST. REPÚBLICA", type: "station", p: 200},
-        {n: "SORTE", type: "luck"}, {n: "LEBLON", type: "prop", g: "azul", p: 350, r: [35,175,500,1100,1300,1500], h: 200},
-        {n: "TAXA RIQUEZA", type: "tax", val: 100}, {n: "AV. OCEÂNICA", type: "prop", g: "azul", p: 400, r: [50,200,600,1400,1700,2000], h: 200}
+        {n: "PARTIDA", type: "go"},
+        {n: "AV. SUMARÉ", type: "prop", g: "brown", p: 60, r: [2, 10, 30, 90, 160, 250], h: 50},
+        {n: "COFRE", type: "chest"},
+        {n: "AV. SÃO JOÃO", type: "prop", g: "brown", p: 60, r: [4, 20, 60, 180, 320, 450], h: 50},
+        {n: "IMPOSTO DE RENDA", type: "tax", val: 200},
+        {n: "ESTAÇÃO MARACANÃ", type: "station", p: 200, icon: "🚆"},
+        {n: "RUA 25 DE MARÇO", type: "prop", g: "lblue", p: 100, r: [6, 30, 90, 270, 400, 550], h: 50},
+        {n: "SORTE", type: "luck"},
+        {n: "AV. PAULISTA", type: "prop", g: "lblue", p: 100, r: [6, 30, 90, 270, 400, 550], h: 50},
+        {n: "AV. VIEIRA SOUTO", type: "prop", g: "lblue", p: 120, r: [8, 40, 100, 300, 450, 600], h: 50},
+        {n: "PRISÃO", type: "jail"},
+        {n: "AV. ATLÂNTICA", type: "prop", g: "pink", p: 140, r: [10, 50, 150, 450, 625, 750], h: 100},
+        {n: "CIA ELÉTRICA", type: "util", p: 150, icon: "💡"},
+        {n: "AV. NITERÓI", type: "prop", g: "pink", p: 140, r: [10, 50, 150, 450, 625, 750], h: 100},
+        {n: "AV. BRIG. FARIA LIMA", type: "prop", g: "pink", p: 160, r: [12, 60, 180, 500, 700, 900], h: 100},
+        {n: "ESTAÇÃO CARIOCA", type: "station", p: 200, icon: "🚆"},
+        {n: "AV. ENG. LUIS C. BERRINI", type: "prop", g: "orange", p: 180, r: [14, 70, 200, 550, 750, 950], h: 100},
+        {n: "COFRE", type: "chest"},
+        {n: "AV. PRES. JK", type: "prop", g: "orange", p: 180, r: [14, 70, 200, 550, 750, 950], h: 100},
+        {n: "AV. 9 DE JULHO", type: "prop", g: "orange", p: 200, r: [16, 80, 220, 600, 800, 1000], h: 100},
+        {n: "PARADA GRÁTIS", type: "free"},
+        {n: "AV. EUROPA", type: "prop", g: "red", p: 220, r: [18, 90, 250, 700, 875, 1050], h: 150},
+        {n: "SORTE", type: "luck"},
+        {n: "AV. AUGUSTA", type: "prop", g: "red", p: 220, r: [18, 90, 250, 700, 875, 1050], h: 150},
+        {n: "AV. PACAEMBU", type: "prop", g: "red", p: 240, r: [20, 100, 300, 750, 925, 1100], h: 150},
+        {n: "ESTAÇÃO CONSOLAÇÃO", type: "station", p: 200, icon: "🚆"},
+        {n: "INTERLAGOS", type: "prop", g: "yellow", p: 260, r: [22, 110, 330, 800, 975, 1150], h: 150},
+        {n: "MORUMBI", type: "prop", g: "yellow", p: 260, r: [22, 110, 330, 800, 975, 1150], h: 150},
+        {n: "CIA ÁGUA", type: "util", p: 150, icon: "🚰"},
+        {n: "IBIRAPUERA", type: "prop", g: "yellow", p: 280, r: [24, 120, 360, 850, 1025, 1200], h: 150},
+        {n: "VÁ PARA A PRISÃO", type: "gojail"},
+        {n: "BARRA DA TIJUCA", type: "prop", g: "green", p: 300, r: [26, 130, 390, 900, 1100, 1275], h: 200},
+        {n: "JARDIM BOTÂNICO", type: "prop", g: "green", p: 300, r: [26, 130, 390, 900, 1100, 1275], h: 200},
+        {n: "COFRE", type: "chest"},
+        {n: "IPANEMA", type: "prop", g: "green", p: 320, r: [28, 150, 450, 1000, 1200, 1400], h: 200},
+        {n: "ESTAÇÃO REPÚBLICA", type: "station", p: 200, icon: "🚆"},
+        {n: "SORTE", type: "luck"},
+        {n: "LEBLON", type: "prop", g: "blue", p: 350, r: [35, 175, 500, 1100, 1300, 1500], h: 200},
+        {n: "TAXA DE RIQUEZA", type: "tax", val: 100},
+        {n: "AV. OCEÂNICA", type: "prop", g: "blue", p: 400, r: [50, 200, 600, 1400, 1700, 2000], h: 200}
     ];
 
-    const COLORS = { marrom: "#955436", azulclaro: "#87CEEB", rosa: "#D93A96", laranja: "#F7941D", vermelho: "#ED1C24", amarelo: "#FFF200", verde: "#1FB25A", azul: "#006AB3" };
-    const LUCK_CARDS = [
-        {t: "SORTE", m: "Receba M$ 50 de dividendos", v: 50}, {t: "SORTE", m: "Multa por excesso de velocidade: Pague M$ 15", v: -15},
-        {t: "SORTE", m: "Sua apólice de seguro venceu: Receba M$ 100", v: 100}, {t: "SORTE", m: "Vá para a Prisão sem passar pela partida", f: "jail"},
-        {t: "SORTE", m: "Avance até a Partida", f: "go"}, {t: "SORTE", m: "Pague M$ 50 para cada casa que possuir", f: "repair"}
-    ];
+    const COLORS = { brown: "#78350f", lblue: "#7dd3fc", pink: "#db2777", orange: "#f97316", red: "#ef4444", yellow: "#facc15", green: "#15803d", blue: "#1e40af" };
+    
+    // Globais
+    let players = [], turn = 0, doublesCount = 0, housesThisTurn = 0;
+    const audio = new (window.AudioContext || window.webkitAudioContext)();
 
-    let players = [], turn = 0, doublesCount = 0, isGameOver = false;
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    function playSound(freq, type, duration) {
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-        osc.connect(g); g.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    function sfx(f, type="sine", d=0.1) {
+        let o = audio.createOscillator(); let g = audio.createGain();
+        o.type = type; o.frequency.setValueAtTime(f, audio.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
+        o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + d);
     }
 
-    function createSetupFields() {
-        const n = document.getElementById('qt-players').value;
-        const cont = document.getElementById('player-setup-list');
-        const icons = ["🚗","🚀","🎩","🦖","🚢","🐕"];
-        cont.innerHTML = "";
-        for(let i=0; i<n; i++){
-            cont.innerHTML += `<div class="player-row">
-                <input type="text" id="p-name-${i}" value="Jogador ${i+1}">
-                <select id="p-icon-${i}">${icons.map(ic => `<option>${ic}</option>`).join('')}</select>
-            </div>`;
+    function initSetup() {
+        const n = document.getElementById('p-count').value;
+        const list = document.getElementById('setup-list');
+        const icons = ["🎩","🚗","🐕","🚀","🏎️","🚢","👟","🐱"];
+        list.innerHTML = "";
+        for(let i=0; i<n; i++) {
+            list.innerHTML += `
+                <div class="player-input">
+                    <span style="font-size:20px">${icons[i]}</span>
+                    <input id="p-name-${i}" value="Jogador ${i+1}" style="flex:1; background:transparent; border:none; color:white; border-bottom:1px solid #666">
+                </div>`;
         }
     }
 
-    function initGame() {
-        const n = document.getElementById('qt-players').value;
-        for(let i=0; i<n; i++){
+    function startGame() {
+        const n = parseInt(document.getElementById('p-count').value);
+        const icons = ["🎩","🚗","🐕","🚀","🏎️","🚢","👟","🐱"];
+        for(let i=0; i<n; i++) {
             players.push({
-                id: i, name: document.getElementById(`p-name-${i}`).value, 
-                icon: document.getElementById(`p-icon-${i}`).value,
-                money: 1500, pos: 0, inJail: 0, props: [], history: []
+                id: i, name: document.getElementById(`p-name-${i}`).value,
+                icon: icons[i], money: 1500, pos: 0, jail: 0, props: [], history: ["Partida iniciada com M$ 1500"]
             });
         }
         document.getElementById('setup-screen').style.display = 'none';
@@ -200,99 +193,94 @@
         const b = document.getElementById('board');
         TILES.forEach((t, i) => {
             const d = document.createElement('div');
-            d.className = 'tile'; d.id = `t-${i}`;
-            if(i<=10){ d.style.gridRow=11; d.style.gridColumn=11-i; }
-            else if(i<=20){ d.style.gridColumn=1; d.style.gridRow=21-i; }
-            else if(i<=30){ d.style.gridRow=1; d.style.gridColumn=i-19; }
-            else { d.style.gridColumn=11; d.style.gridRow=i-29; }
+            d.className = 'tile'; d.id = `tile-${i}`;
             
-            let html = "";
-            if(t.type === 'prop') html += `<div class="t-color" style="background:${COLORS[t.g]}"></div>`;
-            html += `<div class="t-name">${t.n}</div>`;
+            // Grid Position Logic
+            if(i <= 10) { d.style.gridRow = 11; d.style.gridColumn = 11 - i; }
+            else if(i <= 20) { d.style.gridColumn = 1; d.style.gridRow = 21 - i; }
+            else if(i <= 30) { d.style.gridRow = 1; d.style.gridColumn = i - 19; }
+            else { d.style.gridColumn = 11; d.style.gridRow = i - 29; }
+
+            let html = `<div class="build-area" id="build-${i}"></div>`;
+            if(t.g) html += `<div class="t-color" style="background:${COLORS[t.g]}"></div>`;
+            html += `<div class="t-info">${t.n}${t.icon?`<div style="font-size:12px">${t.icon}</div>`:''}</div>`;
             if(t.p) html += `<div class="t-price">M$ ${t.p}</div>`;
-            if(t.icon) html += `<div style="font-size:12px; text-align:center;">${t.icon}</div>`;
-            d.innerHTML = html + `<div id="builds-${i}" class="house-container"></div>`;
+            
+            d.innerHTML = html;
             b.appendChild(d);
         });
 
         players.forEach(p => {
             const pawn = document.createElement('div');
             pawn.className = 'pawn'; pawn.id = `pawn-${p.id}`; pawn.innerText = p.icon;
-            document.getElementById('pawns-layer').appendChild(pawn);
+            document.body.appendChild(pawn);
         });
         updatePawns();
     }
 
-    async function executeRoll() {
+    async function handleRoll() {
         const p = players[turn];
         document.getElementById('roll-btn').disabled = true;
-        
-        const r1 = Math.ceil(Math.random()*6), r2 = Math.ceil(Math.random()*6);
-        document.getElementById('d1').innerText = ['','⚀','⚁','⚂','⚃','⚄','⚅'][r1];
-        document.getElementById('d2').innerText = ['','⚀','⚁','⚂','⚃','⚄','⚅'][r2];
-        playSound(200, 'square', 0.2);
+        housesThisTurn = 0;
 
-        if(p.inJail > 0) {
-            if(r1 === r2) {
-                p.inJail = 0; log(p, "Tirou dados iguais e saiu da prisão!");
-            } else {
-                p.inJail--;
-                if(p.inJail === 0) {
-                    p.money -= 50; log(p, "Pagou M$ 50 e saiu da prisão.");
-                } else {
-                    log(p, `Ainda preso. Faltam ${p.inJail} turnos.`);
-                    return nextPlayer();
-                }
+        const d1 = Math.ceil(Math.random()*6), d2 = Math.ceil(Math.random()*6);
+        const diceChars = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
+        document.getElementById('die1').innerText = diceChars[d1];
+        document.getElementById('die2').innerText = diceChars[d2];
+        sfx(150, "square", 0.2);
+
+        if(d1 === d2) doublesCount++; else doublesCount = 0;
+
+        if(p.jail > 0) {
+            if(d1 === d2) { p.jail = 0; log(p, "Tirou duplos e saiu da Prisão!"); }
+            else { 
+                p.jail--; 
+                if(p.jail === 0) { p.money -= 50; log(p, "Pagou M$ 50 de fiança."); }
+                else { log(p, `Ainda preso (${p.jail} turnos)`); return setTimeout(nextTurn, 1000); }
             }
         }
 
-        if(r1 === r2) doublesCount++; else doublesCount = 0;
-
         if(doublesCount === 3) {
-            p.pos = 10; p.inJail = 3; doublesCount = 0;
-            showModal("POLÍCIA!", "Três duplos seguidos! Vá para a prisão.", [{t:"IR PARA CADEIA", c:"#e74c3c", f:nextPlayer}]);
-            updatePawns();
-            return;
+            p.pos = 10; p.jail = 3; doublesCount = 0;
+            showModal("POLÍCIA", "Velocidade excessiva! 3 duplos seguidos. Vá para a Prisão!", [{t: "IR", c: "#000", f: nextTurn}]);
+            updatePawns(); return;
         }
 
-        let total = r1 + r2;
-        for(let i=0; i<total; i++) {
+        let steps = d1 + d2;
+        for(let i=0; i<steps; i++) {
             p.pos = (p.pos + 1) % 40;
-            if(p.pos === 0) { p.money += 200; playSound(800, 'sine', 0.3); }
+            if(p.pos === 0) { p.money += 200; sfx(600); log(p, "Recebeu M$ 200 ao passar pela Partida."); }
             updatePawns();
-            playSound(400, 'sine', 0.05);
             await new Promise(r => setTimeout(r, 200));
         }
-
-        handleTile(total);
+        processTile(steps);
     }
 
-    function handleTile(diceSum) {
+    function processTile(dice) {
         const p = players[turn];
         const t = TILES[p.pos];
 
         if(t.type === "gojail") {
-            p.pos = 10; p.inJail = 3;
-            showModal("PRESO!", "Vá direto para a prisão.", [{t:"OK", c:"#000", f:nextPlayer}]);
-        } else if(t.type === "tax") {
-            p.money -= t.val;
-            showModal(t.n, `Pague M$ ${t.val} de impostos.`, [{t:"PAGAR", c:"#e74c3c", f:nextPlayer}]);
+            p.pos = 10; p.jail = 3;
+            showModal("PRISÃO", "Vá direto para o xadrez!", [{t: "OK", c: "#000", f: nextTurn}]);
         } else if(t.p > 0) {
             if(!t.owner) {
-                showModal(t.n, `Deseja comprar por M$ ${t.p}?`, [
-                    {t:"COMPRAR", c:"#2ecc71", f:() => buyProp(p, t)},
-                    {t:"PASSAR", c:"#95a5a6", f:nextPlayer}
+                showModal(t.n, `Deseja comprar esta propriedade por M$ ${t.p}?`, [
+                    {t: "COMPRAR", c: "#16a34a", f: () => buyProp(p, t)},
+                    {t: "LEILOAR", c: "#64748b", f: nextTurn}
                 ]);
             } else if(t.owner !== p && !t.mortgaged) {
-                let rent = calculateRent(t, diceSum);
+                let rent = calculateRent(t, dice);
                 p.money -= rent; t.owner.money += rent;
-                playSound(150, 'sawtooth', 0.4);
-                showModal("ALUGUEL", `Pagou M$ ${rent} para ${t.owner.name}.`, [{t:"OK", c:"#e74c3c", f:nextPlayer}]);
-            } else nextPlayer();
+                log(p, `Pagou M$ ${rent} de aluguel em ${t.n}`);
+                showModal("ALUGUEL", `Você pagou M$ ${rent} para ${t.owner.name}`, [{t: "PAGAR", c: "#dc2626", f: (doublesCount > 0 ? closeModal : nextTurn)}]);
+            } else nextTurn();
+        } else if(t.type === "tax") {
+            p.money -= t.val;
+            showModal(t.n, `Pagamento obrigatório de M$ ${t.val}`, [{t: "PAGAR", c: "#000", f: nextTurn}]);
         } else if(t.type === "luck" || t.type === "chest") {
-            drawCard(p);
-        } else nextPlayer();
-        
+            handleCard(t.type);
+        } else nextTurn();
         updateUI();
     }
 
@@ -305,129 +293,138 @@
             const count = t.owner.props.filter(idx => TILES[idx].type === "util").length;
             return dice * (count === 2 ? 10 : 4);
         }
-        return t.r[t.houses || 0];
+        return t.houses ? t.r[t.houses] : t.r[0];
     }
 
     function buyProp(p, t) {
         if(p.money >= t.p) {
             p.money -= t.p; t.owner = p; p.props.push(p.pos);
+            sfx(800, "sine", 0.3);
             log(p, `Comprou ${t.n} por M$ ${t.p}`);
-            nextPlayer();
+            if(doublesCount > 0) closeModal(); else nextTurn();
         } else alert("Saldo insuficiente!");
     }
 
-    function drawCard(p) {
-        const card = LUCK_CARDS[Math.floor(Math.random()*LUCK_CARDS.length)];
-        showModal(card.t, card.m, [{t:"OK", c:"#3498db", f:() => {
-            if(card.v) p.money += card.v;
-            if(card.f === "jail") { p.pos = 10; p.inJail = 3; }
-            if(card.f === "go") { p.pos = 0; p.money += 200; }
-            nextPlayer();
-        }}]);
+    function handleCard(type) {
+        const p = players[turn];
+        const isLuck = type === "luck";
+        const cards = isLuck ? [
+            {m: "Avance até a Partida", f: () => { p.pos = 0; p.money += 200; }},
+            {m: "Multa por excesso de velocidade: M$ 50", f: () => p.money -= 50},
+            {m: "Sua apólice de seguro venceu: Receba M$ 100", f: () => p.money += 100}
+        ] : [
+            {m: "Erro do banco a seu favor: Receba M$ 200", f: () => p.money += 200},
+            {m: "Despesas hospitalares: Pague M$ 100", f: () => p.money -= 100},
+            {m: "Venda de ações: Receba M$ 50", f: () => p.money += 50}
+        ];
+        const card = cards[Math.floor(Math.random()*cards.length)];
+        card.f();
+        showModal(isLuck?"SORTE":"COFRE", card.m, [{t: "OK", c: isLuck?"#f97316":"#3b82f6", f: nextTurn}]);
     }
 
-    function openPropMenu() {
+    function showAssets() {
         const p = players[turn];
-        let html = `<h4>Seu Saldo: M$ ${p.money}</h4>`;
+        let h = `<div style="text-align:left">Saldo: <b>M$ ${p.money}</b><hr>`;
         p.props.forEach(idx => {
             const t = TILES[idx];
-            html += `<div style="border-bottom:1px solid #eee; padding:10px; text-align:left;">
-                <b>${t.n}</b> ${t.mortgaged ? '(Hipotecado)' : ''}<br>
-                <button onclick="buildHouse(${idx})">Construir (M$ ${t.h})</button>
-                <button onclick="toggleMortgage(${idx})">${t.mortgaged ? 'Quitar' : 'Hipotecar'}</button>
-            </div>`;
+            h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:5px; background:#e2e8f0; border-radius:8px">
+                    <div style="font-size:12px"><b>${t.n}</b><br>Aluguel Atual: M$ ${calculateRent(t, 7)}</div>
+                    <div>
+                        ${(t.g && !t.mortgaged)?`<button onclick="buildHouse(${idx})" style="padding:4px">🏠</button>`:''}
+                        <button onclick="toggleMortgage(${idx})" style="padding:4px">${t.mortgaged?'🏦🔓':'🏦🔒'}</button>
+                    </div>
+                  </div>`;
         });
-        showModal("MEUS IMÓVEIS", html, [{t:"VOLTAR", c:"#000", f:closeModal}]);
+        showModal("PATRIMÔNIO", h || "Nenhuma propriedade comprada.", [{t: "FECHAR", c: "#000", f: closeModal}]);
     }
 
     function buildHouse(idx) {
-        const p = players[turn];
-        const t = TILES[idx];
+        const p = players[turn]; const t = TILES[idx];
+        if(housesThisTurn >= 4) return alert("Limite de 4 casas por rodada atingido!");
         if(!t.houses) t.houses = 0;
+        if(t.houses === 4 && housesThisTurn > 0) return alert("Hotéis só podem ser construídos no próximo turno.");
         if(t.houses < 5 && p.money >= t.h) {
-            p.money -= t.h; t.houses++;
-            updateUI(); updateBuilds();
-            alert(`Construção realizada em ${t.n}!`);
-            closeModal();
-        } else alert("Não é possível construir.");
+            p.money -= t.h; t.houses++; housesThisTurn++;
+            updateVisualBuilds(); updateUI(); showAssets();
+        }
     }
 
     function toggleMortgage(idx) {
-        const p = players[turn];
-        const t = TILES[idx];
-        const val = t.p / 2;
+        const p = players[turn]; const t = TILES[idx];
         if(!t.mortgaged) {
-            t.mortgaged = true; p.money += val;
+            t.mortgaged = true; p.money += (t.p / 2);
         } else {
-            if(p.money >= val * 1.1) {
-                t.mortgaged = false; p.money -= (val * 1.1);
-            } else return alert("Saldo insuficiente para quitar hipoteca (+10% juros)");
+            let cost = Math.floor((t.p / 2) * 1.1);
+            if(p.money >= cost) { p.money -= cost; t.mortgaged = false; }
         }
-        updateUI(); closeModal();
+        updateUI(); showAssets();
     }
 
-    function nextPlayer() {
+    function nextTurn() {
         closeModal();
         if(doublesCount === 0) turn = (turn + 1) % players.length;
         document.getElementById('roll-btn').disabled = false;
-        document.getElementById('msg-box').innerText = `Vez de: ${players[turn].name}`;
-        updateUI(); updatePawns();
+        document.getElementById('game-status').innerText = `VEZ DE: ${players[turn].name.toUpperCase()} ${doublesCount>0?'(DREN!)':''}`;
+        updateUI();
     }
 
     function updateUI() {
-        const bar = document.getElementById('status-bar');
-        bar.innerHTML = players.map(p => `
-            <div class="player-tab ${turn === p.id ? 'active' : ''}">
-                <div style="font-size:18px">${p.icon}</div>
-                <div style="font-size:11px; opacity:0.8">${p.name}</div>
-                <div class="mny">M$ ${p.money}</div>
+        const hud = document.getElementById('hud');
+        hud.innerHTML = players.map(p => `
+            <div class="player-chip ${p.id===turn?'active':''}">
+                ${p.jail?`<span class="jail-badge">PRESO</span>`:''}
+                <div style="font-weight:900">${p.icon} ${p.name}</div>
+                <div class="money-text">M$ ${p.money}</div>
             </div>`).join('');
     }
 
     function updatePawns() {
         players.forEach(p => {
-            const t = document.getElementById(`t-${p.pos}`);
-            const el = document.getElementById(`pawn-${p.id}`);
-            const off = p.id * 4;
-            el.style.top = (t.offsetTop + 10 + off) + "px";
-            el.style.left = (t.offsetLeft + 10 + off) + "px";
+            const tile = document.getElementById(`tile-${p.pos}`);
+            const pawn = document.getElementById(`pawn-${p.id}`);
+            const rect = tile.getBoundingClientRect();
+            pawn.style.top = (rect.top + 5 + (p.id * 3)) + "px";
+            pawn.style.left = (rect.left + 5 + (p.id * 3)) + "px";
         });
     }
 
-    function updateBuilds() {
+    function updateVisualBuilds() {
         TILES.forEach((t, i) => {
-            if(t.houses) {
-                const cont = document.getElementById(`builds-${i}`);
-                cont.innerHTML = t.houses === 5 ? '<div class="hotel"></div>' : '<div class="house"></div>'.repeat(t.houses);
-            }
+            const area = document.getElementById(`build-${i}`);
+            if(!area) return; area.innerHTML = "";
+            if(t.houses === 5) area.innerHTML = '<div class="h-hotel"></div>';
+            else for(let x=0; x<t.houses; x++) area.innerHTML += '<div class="h-house"></div>';
         });
     }
 
     function log(p, msg) { p.history.push(msg); }
 
     function showHistory() {
-        const p = players[turn];
-        showModal("HISTÓRICO", p.history.length ? p.history.join('<br>') : "Sem registros.", [{t:"FECHAR", c:"#000", f:closeModal}]);
+        const h = players[turn].history.slice(-10).reverse().join("<br>• ");
+        showModal("LOG INDIVIDUAL", "• " + h, [{t: "VOLTAR", c: "#000", f: closeModal}]);
     }
 
     function showModal(t, b, btns) {
         document.getElementById('m-title').innerText = t;
         document.getElementById('m-body').innerHTML = b;
-        const foot = document.getElementById('m-footer'); foot.innerHTML = "";
+        const f = document.getElementById('m-footer'); f.innerHTML = "";
         btns.forEach(btn => {
-            const eb = document.createElement('button'); eb.className='btn-modal'; eb.innerText=btn.t;
-            eb.style.background=btn.c; eb.onclick=btn.f; foot.appendChild(eb);
+            const bEl = document.createElement('button');
+            bEl.className = 'btn'; bEl.style.width = "100%"; bEl.style.marginTop = "10px";
+            bEl.style.background = btn.c; bEl.innerText = btn.t; bEl.onclick = btn.f;
+            f.appendChild(bEl);
         });
-        document.getElementById('overlay').style.display='block';
-        document.getElementById('modal').style.display='block';
+        document.getElementById('overlay').style.display = 'block';
+        document.getElementById('modal').style.display = 'block';
     }
 
     function closeModal() {
-        document.getElementById('overlay').style.display='none';
-        document.getElementById('modal').style.display='none';
+        document.getElementById('overlay').style.display = 'none';
+        document.getElementById('modal').style.display = 'none';
     }
 
-    createSetupFields();
+    window.onresize = updatePawns;
+    initSetup();
 </script>
 </body>
 </html>
