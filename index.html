@@ -3,328 +3,338 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monopoly Brasil - Global Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>Monopoly Brasil - Ultimate Global Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #00ffa3; --secondary: #00d1ff; --bg: #080c10;
-            --card-bg: rgba(255, 255, 255, 0.07); --gold: #ffcc00;
-            --danger: #ff4757; --text: #ffffff; --board-white: #f0f4f2;
+            --primary: #00ffa3; --secondary: #00d1ff; --bg: #05070a;
+            --card-bg: rgba(255, 255, 255, 0.06); --danger: #ff4757;
+            --gold: #ffcc00; --board-white: #f0f4f2;
+            --tile-size: 8.5vmin;
         }
 
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        body { background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* SETUP SCREEN */
-        #setup-screen {
-            position: fixed; inset: 0; background: var(--bg); z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto;
-        }
-        .setup-card { background: var(--card-bg); padding: 25px; border-radius: 24px; width: 100%; max-width: 500px; backdrop-filter: blur(10px); }
-        .player-input-row { display: flex; gap: 10px; margin-bottom: 15px; animation: slideIn 0.3s ease; }
-        input, select { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 12px; outline: none; flex: 1; }
-
-        /* GAME LAYOUT */
-        .game-wrapper { display: none; flex-direction: column; height: 100vh; width: 100vw; }
+        /* SETUP */
+        #setup { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .setup-box { background: var(--card-bg); padding: 30px; border-radius: 30px; width: 100%; max-width: 400px; backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        .p-row { display: flex; gap: 10px; margin-bottom: 12px; animation: slideUp 0.4s ease; }
         
-        /* TABULEIRO RESPONSIVO */
-        .board-viewport { 
-            flex: 1; display: flex; align-items: center; justify-content: center; 
-            padding: 10px; background: radial-gradient(circle, #1a202c 0%, #080c10 100%);
-        }
-        #board-container {
-            display: grid; width: 95vw; height: 95vw; max-width: 600px; max-height: 600px;
-            background: var(--board-white); border: 8px solid #111; border-radius: 10px;
+        /* BOARD LAYOUT */
+        .main-ui { display: none; flex-direction: column; height: 100vh; position: relative; }
+        .viewport { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        
+        #board {
+            display: grid; width: 94vmin; height: 94vmin; background: var(--board-white);
+            border: 6px solid #111; border-radius: 12px;
             grid-template-columns: 1.5fr repeat(9, 1fr) 1.5fr;
             grid-template-rows: 1.5fr repeat(9, 1fr) 1.5fr;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
         }
 
-        .tile { border: 0.2px solid rgba(0,0,0,0.1); font-size: 6px; font-weight: 800; color: #111; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; text-align: center; }
-        .tile span { padding: 2px; line-height: 1; pointer-events: none; }
-        .bar { width: 100%; height: 20%; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .tile { border: 0.1px solid rgba(0,0,0,0.1); position: relative; display: flex; flex-direction: column; cursor: pointer; color: #111; transition: 0.2s; }
+        .tile:active { transform: scale(0.95); }
+        .tile .name { font-size: 1.3vmin; font-weight: 800; text-align: center; padding: 2px; text-transform: uppercase; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
+        .tile .bar { width: 100%; height: 22%; border-bottom: 1px solid rgba(0,0,0,0.1); }
         
-        /* HUD & SIDEBAR MOBILE */
-        .hud-bottom { background: #111; padding: 15px; display: flex; gap: 10px; overflow-x: auto; border-top: 1px solid #333; }
-        .mini-player-card { min-width: 120px; background: var(--card-bg); padding: 10px; border-radius: 15px; text-align: center; border: 2px solid transparent; transition: 0.3s; }
-        .mini-player-card.active { border-color: var(--primary); transform: translateY(-5px); }
+        /* PAWNS SYSTEM */
+        .pawn-zone { position: absolute; inset: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; pointer-events: none; z-index: 10; padding: 2px; }
+        .pawn { font-size: 2.8vmin; transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4)); }
 
-        /* PEÕES */
-        .pawn-grid { position: absolute; inset: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; pointer-events: none; padding: 2px; }
-        .pawn { font-size: 14px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        /* CENTER AREA */
+        .center-area { grid-column: 2/11; grid-row: 2/11; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        #dice-view { font-size: 12vmin; margin-bottom: 10px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2)); transition: 0.2s; }
+        .roll-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; padding: 15px 40px; border-radius: 50px; font-weight: 900; color: #000; cursor: pointer; box-shadow: 0 10px 20px rgba(0,255,163,0.3); text-transform: uppercase; }
 
-        /* MODAIS PROFISSIONAIS */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
-        .modal-content { background: white; color: #111; width: 100%; max-width: 350px; border-radius: 30px; padding: 30px; text-align: center; animation: pop 0.4s ease; }
+        /* HUD */
+        .hud { height: 130px; background: #0a0e14; display: flex; gap: 12px; padding: 15px; overflow-x: auto; border-top: 2px solid #1a1f26; }
+        .p-card { min-width: 120px; background: var(--card-bg); border-radius: 20px; padding: 12px; text-align: center; border: 2px solid transparent; flex-shrink: 0; transition: 0.3s; }
+        .p-card.active { border-color: var(--primary); background: rgba(0,255,163,0.08); transform: translateY(-5px); }
+        .p-card .cash { color: var(--primary); font-weight: 800; font-size: 14px; }
+
+        /* MODAIS & CARDS */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(10px); }
+        .modal { background: white; color: #111; width: 100%; max-width: 340px; border-radius: 30px; padding: 25px; text-align: center; animation: pop 0.4s ease; }
         
-        /* BOTÕES */
-        .btn { border: none; border-radius: 14px; font-weight: 800; cursor: pointer; padding: 15px; text-transform: uppercase; transition: 0.2s; }
-        .btn-main { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #000; width: 100%; box-shadow: 0 5px 15px rgba(0,255,163,0.3); }
-        .btn-add { background: none; border: 2px dashed var(--secondary); color: var(--secondary); margin-bottom: 20px; width: 100%; }
+        /* MONEY PARTICLES CANVAS */
+        #money-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 11000; }
 
-        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-        .log-area { font-size: 10px; color: #888; margin-top: 10px; text-align: left; max-height: 60px; overflow-y: auto; border-top: 1px solid #222; padding-top: 5px; }
+        @keyframes pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .house { font-size: 1.5vmin; display: inline-block; }
     </style>
 </head>
 <body>
 
-<div id="setup-screen">
-    <h1 style="margin: 40px 0 20px; color: var(--primary); font-weight: 800;">MONOPOLY BRASIL</h1>
-    <div class="setup-card" id="setup-card">
-        <div id="players-input-container">
-            </div>
-        <button class="btn btn-add" onclick="addPlayerInput()">+ ADICIONAR JOGADOR (MÁX 10)</button>
-        <button class="btn btn-main" onclick="startGame()">COMEÇAR PARTIDA GLOBAL</button>
+<canvas id="money-canvas"></canvas>
+
+<div id="setup">
+    <div class="setup-box">
+        <h2 style="text-align:center; margin-bottom:20px; color:var(--primary)">MONOPOLY PRO</h2>
+        <div id="p-inputs"></div>
+        <button class="roll-btn" style="width:100%; margin-top:10px" onclick="addPRow()">+ ADICIONAR JOGADOR</button>
+        <button class="roll-btn" style="width:100%; margin-top:10px; background:white;" onclick="start()">INICIAR PARTIDA</button>
     </div>
 </div>
 
-<div class="game-wrapper" id="game-ui">
-    <div class="board-viewport">
-        <div id="board-container">
-            <div style="grid-column: 2/11; grid-row: 2/11; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
-                <div id="dice-display" style="font-size: 50px; margin-bottom: 10px;">🎲🎲</div>
-                <button id="roll-btn" class="btn btn-main" style="width: 180px;" onclick="rollDice()">JOGAR DADOS</button>
-                <p id="turn-info" style="margin-top:10px; font-weight: 800; font-size: 12px;"></p>
+<div class="main-ui" id="main-ui">
+    <div class="viewport">
+        <div id="board">
+            <div class="center-area">
+                <div id="dice-view">🎲🎲</div>
+                <button class="roll-btn" id="main-btn" onclick="play()">LANÇAR DADOS</button>
+                <p id="status-msg" style="color:#333; font-weight:800; margin-top:10px; font-size:12px"></p>
             </div>
         </div>
     </div>
-
-    <div class="hud-bottom" id="hud-players">
-        </div>
+    <div class="hud" id="hud"></div>
 </div>
 
-<div class="modal-overlay" id="modal-overlay">
-    <div class="modal-content">
-        <div id="modal-body"></div>
-        <div id="modal-footer" style="margin-top: 20px;"></div>
-        <button class="btn" style="background:#eee; width:100%; margin-top:10px;" onclick="closeModal()">FECHAR</button>
+<div class="overlay" id="overlay">
+    <div class="modal">
+        <div id="m-body"></div>
+        <div id="m-footer" style="margin-top:20px"></div>
+        <button class="roll-btn" style="background:#eee; margin-top:10px; width:100%" onclick="closeM()">FECHAR</button>
     </div>
 </div>
 
 <script>
-    const AVATARES = ["🏎️", "🎩", "🐕", "🦖", "🛳️", "🦆", "🐧", "🚀", "🎸", "🍕"];
-    const TABULEIRO = [
-        {n:"PARTIDA", t:"start"}, {n:"AV. SUMARÉ", c:"#955436", p:60, b:50, r:[2,10,30,90,160,250]}, {n:"COFRE", t:"chest"},
-        {n:"PRAÇA DA SÉ", c:"#955436", p:60, b:50, r:[4,20,60,180,320,450]}, {n:"IMPOSTO", p:200, t:"tax"}, 
-        {n:"MARACANÃ", p:200, t:"trem"}, {n:"RUA 25 MARÇO", c:"#aae0fa", p:100, b:50, r:[6,30,90,270,400,550]}, 
-        {n:"SORTE", t:"lucky"}, {n:"AV. SÃO JOÃO", c:"#aae0fa", p:100, b:50, r:[6,30,90,270,400,550]}, 
-        {n:"AV. PAULISTA", c:"#aae0fa", p:120, b:50, r:[8,40,100,300,450,600]}, {n:"PRISÃO", t:"visit"}, 
-        {n:"VIEIRA SOUTO", c:"#d93a96", p:140, b:100, r:[10,50,150,450,625,750]}, {n:"CIA LUZ", p:150, t:"util"}, 
-        {n:"NITERÓI", c:"#d93a96", p:140, b:100, r:[10,50,150,450,625,750]}, {n:"AV. ATLÂNTICA", c:"#d93a96", p:160, b:100, r:[12,60,180,500,700,900]}, 
-        {n:"EST. CARIOCA", p:200, t:"trem"}, {n:"AV. JUSCELINO", c:"#f7941d", p:180, b:100, r:[14,70,200,550,750,950]}, 
-        {n:"COFRE", t:"chest"}, {n:"AV. BERRINI", c:"#f7941d", p:180, b:100, r:[14,70,200,550,750,950]}, 
-        {n:"FARIA LIMA", c:"#f7941d", p:200, b:100, r:[16,80,220,600,800,1000]}, {n:"ESTACIONA", t:"parking"}, 
-        {n:"IPANEMA", c:"#ed1c24", p:220, b:150, r:[18,90,250,700,875,1050]}, {n:"SORTE", t:"lucky"}, 
-        {n:"LEBLON", c:"#ed1c24", p:220, b:150, r:[18,90,250,700,875,1050]}, {n:"COPACABANA", c:"#ed1c24", p:240, b:150, r:[20,100,300,750,925,1100]}, 
-        {n:"CONSOLAÇÃO", p:200, t:"trem"}, {n:"CIDADE JARDIM", c:"#fef200", p:260, b:150, r:[22,110,330,800,975,1150]}, 
-        {n:"PACAEMBU", c:"#fef200", p:260, b:150, r:[22,110,330,800,975,1150]}, {n:"CIA ÁGUA", p:150, t:"util"}, 
-        {n:"IBIRAPUERA", c:"#fef200", p:280, b:150, r:[24,120,360,850,1025,1200]}, {n:"VÁ PRESO", t:"gotojail"}, 
-        {n:"BARRA", c:"#19a05e", p:300, b:200, r:[26,130,390,900,1100,1275]}, {n:"J. BOTÂNICO", c:"#19a05e", p:300, b:200, r:[26,130,390,900,1100,1275]}, 
-        {n:"COFRE", t:"chest"}, {n:"LAGOA", c:"#19a05e", p:320, b:200, r:[28,150,450,1000,1200,1400]}, 
-        {n:"EST. REPÚBLICA", p:200, t:"trem"}, {n:"SORTE", t:"lucky"}, 
-        {n:"AV. MORUMBI", c:"#0068a7", p:350, b:200, r:[35,175,500,1100,1300,1500]}, 
-        {n:"TAXA RIQUEZA", p:100, t:"tax"}, {n:"OSCAR FREIRE", c:"#0068a7", p:400, b:200, r:[50,200,600,1400,1700,2000]}
-    ];
+// --- CONFIGURAÇÃO GLOBAL ---
+const AVATARES = ["🏎️", "🎩", "🐕", "🦖", "🛳️", "🦆", "🐧", "🚀", "🎸", "🍕"];
+const CORES = ["#ff4757", "#1e90ff", "#2ed573", "#ffa502", "#a29bfe", "#fd79a8", "#feca57", "#54a0ff", "#5f27cd", "#48dbfb"];
 
-    let game = { players: [], turn: 0, props: {}, doubles: 0 };
+const SORTE_COFRE = [
+    {t: "Receba Dividendos: +$50", v: 50}, {t: "Multa de Trânsito: -$100", v: -100},
+    {t: "Herança Inesperada: +$200", v: 200}, {t: "Reforma em casa: -$150", v: -150},
+    {t: "Prêmio de Consolação: +$20", v: 20}, {t: "Vá para a Prisão!", jail: true}
+];
 
-    // GERAR SETUP
-    function addPlayerInput() {
-        const container = document.getElementById('players-input-container');
-        if (container.children.length >= 10) return;
-        const idx = container.children.length;
-        const div = document.createElement('div');
-        div.className = 'player-input-row';
-        div.innerHTML = `
-            <input type="text" id="name-${idx}" placeholder="Nome do Jogador ${idx+1}">
-            <select id="avatar-${idx}">
-                ${AVATARES.map(a => `<option>${a}</option>`).join('')}
-            </select>
-        `;
-        container.appendChild(div);
+const TABULEIRO = [
+    {n:"PARTIDA", t:"start"}, {n:"SUMARÉ", c:"#955436", p:60, b:50, r:[2,10,30,90,160,250]}, {n:"COFRE", t:"card"},
+    {n:"PRAÇA SÉ", c:"#955436", p:60, b:50, r:[4,20,60,180,320,450]}, {n:"IMPOSTO", p:200, t:"tax"}, 
+    {n:"MARACANÃ", p:200, t:"rail"}, {n:"25 MARÇO", c:"#aae0fa", p:100, b:50, r:[6,30,90,270,400,550]}, 
+    {n:"SORTE", t:"card"}, {n:"SÃO JOÃO", c:"#aae0fa", p:100, b:50, r:[6,30,90,270,400,550]}, 
+    {n:"PAULISTA", c:"#aae0fa", p:120, b:50, r:[8,40,100,300,450,600]}, {n:"PRISÃO", t:"visit"}, 
+    {n:"VIEIRA SOUTO", c:"#d93a96", p:140, b:100, r:[10,50,150,450,625,750]}, {n:"CIA LUZ", p:150, t:"util"}, 
+    {n:"NITERÓI", c:"#d93a96", p:140, b:100, r:[10,50,150,450,625,750]}, {n:"ATLÂNTICA", c:"#d93a96", p:160, b:100, r:[12,60,180,500,700,900]}, 
+    {n:"CARIOCA", p:200, t:"rail"}, {n:"JUSCELINO", c:"#f7941d", p:180, b:100, r:[14,70,200,550,750,950]}, 
+    {n:"COFRE", t:"card"}, {n:"BERRINI", c:"#f7941d", p:180, b:100, r:[14,70,200,550,750,950]}, 
+    {n:"FARIA LIMA", c:"#f7941d", p:200, b:100, r:[16,80,220,600,800,1000]}, {n:"PARADA", t:"free"}, 
+    {n:"IPANEMA", c:"#ed1c24", p:220, b:150, r:[18,90,250,700,875,1050]}, {n:"SORTE", t:"card"}, 
+    {n:"LEBLON", c:"#ed1c24", p:220, b:150, r:[18,90,250,700,875,1050]}, {n:"COPACABANA", c:"#ed1c24", p:240, b:150, r:[20,100,300,750,925,1100]}, 
+    {n:"PONTE", p:200, t:"rail"}, {n:"CID. JARDIM", c:"#fef200", p:260, b:150, r:[22,110,330,800,975,1150]}, 
+    {n:"PACAEMBU", c:"#fef200", p:260, b:150, r:[22,110,330,800,975,1150]}, {n:"CIA ÁGUA", p:150, t:"util"}, 
+    {n:"IBIRAPUERA", c:"#fef200", p:280, b:150, r:[24,120,360,850,1025,1200]}, {n:"VÁ PRESO", t:"jail"}, 
+    {n:"BARRA", c:"#19a05e", p:300, b:200, r:[26,130,390,900,1100,1275]}, {n:"BOTÂNICO", c:"#19a05e", p:300, b:200, r:[26,130,390,900,1100,1275]}, 
+    {n:"COFRE", t:"card"}, {n:"LAGOA", c:"#19a05e", p:320, b:200, r:[28,150,450,1000,1200,1400]}, 
+    {n:"TIETÊ", p:200, t:"rail"}, {n:"SORTE", t:"card"}, 
+    {n:"MORUMBI", c:"#0068a7", p:350, b:200, r:[35,175,500,1100,1300,1500]}, 
+    {n:"TAXA", p:100, t:"tax"}, {n:"OSCAR FREIRE", c:"#0068a7", p:400, b:200, r:[50,200,600,1400,1700,2000]}
+];
+
+let game = { players: [], turn: 0, props: {}, doubles: 0 };
+
+// --- ÁUDIO ENGINE ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(freq, type, duration) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+}
+
+// --- DINHEIRO VOANDO (PARTICLES) ---
+const canvas = document.getElementById('money-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+window.onresize = resize; resize();
+
+class Particle {
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = canvas.height + 20;
+        this.v = Math.random() * 5 + 2;
+        this.angle = Math.random() * 6;
     }
-    // Começa com 2 jogadores
-    addPlayerInput(); addPlayerInput();
+    draw() {
+        ctx.fillStyle = "#00ffa3";
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.fillRect(0, 0, 15, 8);
+        ctx.restore();
+        this.y -= this.v; this.angle += 0.1;
+    }
+}
 
-    function startGame() {
-        const container = document.getElementById('players-input-container');
-        for (let i = 0; i < container.children.length; i++) {
-            const name = document.getElementById(`name-${i}`).value || `Jogador ${i+1}`;
-            const avatar = document.getElementById(`avatar-${i}`).value;
-            game.players.push({ 
-                id: i, name: name, avatar: avatar, cash: 1500, pos: 0, 
-                jailed: false, logs: ["Partida Iniciada"] 
-            });
-        }
-        document.getElementById('setup-screen').style.display = 'none';
-        document.getElementById('game-ui').style.display = 'flex';
-        renderBoard();
-        updateHUD();
+function spawnMoney() { for(let i=0; i<30; i++) particles.push(new Particle()); }
+function updateParticles() {
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    particles = particles.filter(p => p.y > -20);
+    particles.forEach(p => p.draw());
+    requestAnimationFrame(updateParticles);
+}
+updateParticles();
+
+// --- LÓGICA DO JOGO ---
+function addPRow() {
+    const container = document.getElementById('p-inputs');
+    const i = container.children.length; if(i >= 10) return;
+    const div = document.createElement('div'); div.className = 'p-row';
+    div.innerHTML = `<input id="name-${i}" placeholder="Nome ${i+1}"><select id="av-${i}">${AVATARES.map(a=>`<option>${a}</option>`).join('')}</select>`;
+    container.appendChild(div);
+}
+addPRow(); addPRow();
+
+function start() {
+    const rows = document.getElementById('p-inputs').children;
+    for(let i=0; i<rows.length; i++) {
+        const name = document.getElementById(`name-${i}`).value || `P${i+1}`;
+        const avatar = document.getElementById(`av-${i}`).value;
+        game.players.push({ id:i, name, avatar, cash:1500, pos:0, jailed:false, color:CORES[i] });
+    }
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('main-ui').style.display = 'flex';
+    renderBoard(); updateHUD();
+}
+
+function renderBoard() {
+    const b = document.getElementById('board');
+    TABULEIRO.forEach((tile, i) => {
+        const el = document.createElement('div'); el.className = 'tile'; el.id = `tile-${i}`;
+        el.onclick = () => showProperty(i);
+        
+        // Grid CSS
+        if(i <= 10) el.style.gridRow = "11"; else if(i <= 20) el.style.gridColumn = "1";
+        else if(i <= 30) el.style.gridRow = "1"; else el.style.gridColumn = "11";
+        if(i > 0 && i < 10) el.style.gridColumn = 11 - i; 
+        if(i > 10 && i < 20) el.style.gridRow = 21 - i;
+        if(i > 20 && i < 30) el.style.gridColumn = i - 19;
+        if(i > 30) el.style.gridRow = i - 29;
+
+        el.innerHTML = `${tile.c?`<div class="bar" style="background:${tile.c}"></div>`:''}
+                        <div class="name">${tile.n}</div>
+                        <div class="pawn-zone" id="pz-${i}"></div>
+                        <div id="build-${i}" style="text-align:center"></div>`;
+        b.appendChild(el);
+    });
+    updateUI();
+}
+
+async function play() {
+    const btn = document.getElementById('main-btn'); btn.disabled = true;
+    let d1 = Math.floor(Math.random()*6)+1, d2 = Math.floor(Math.random()*6)+1;
+    let p = game.players[game.turn];
+    
+    // Som de dados
+    playSound(200, 'square', 0.1); setTimeout(()=>playSound(150, 'square', 0.1), 100);
+
+    document.getElementById('dice-view').innerHTML = `${["⚀","⚁","⚂","⚃","⚄","⚅"][d1-1]} ${["⚀","⚁","⚂","⚃","⚄","⚅"][d2-1]}`;
+
+    if(p.jailed) {
+        if(d1===d2) { p.jailed = false; } 
+        else { nextTurn(); return; }
     }
 
-    function renderBoard() {
-        const container = document.getElementById('board-container');
-        TABULEIRO.forEach((casa, i) => {
-            const tile = document.createElement('div'); tile.className = 'tile'; tile.id = `tile-${i}`;
-            tile.onclick = () => handleTileClick(i);
-            
-            // Layout da Grid (Sentido Horário)
-            if(i <= 10) tile.style.gridRow = "11"; else if(i <= 20) tile.style.gridColumn = "1";
-            else if(i <= 30) tile.style.gridRow = "1"; else tile.style.gridColumn = "11";
-            if(i > 0 && i < 10) tile.style.gridColumn = 11 - i; 
-            if(i > 10 && i < 20) tile.style.gridRow = 21 - i;
-            if(i > 20 && i < 30) tile.style.gridColumn = i - 19;
-            if(i > 30) tile.style.gridRow = i - 29;
-
-            tile.innerHTML = `${casa.c ? `<div class="bar" style="background:${casa.c}"></div>` : ''}
-                <span>${casa.n}</span>
-                <div class="pawn-grid" id="pg-${i}"></div>
-                <div id="build-${i}" style="font-size:8px"></div>`;
-            container.appendChild(tile);
-        });
-        updatePawns();
-    }
-
-    async function rollDice() {
-        const btn = document.getElementById('roll-btn'); btn.disabled = true;
-        let d1 = Math.floor(Math.random()*6)+1, d2 = Math.floor(Math.random()*6)+1;
-        let total = d1 + d2;
-        let p = game.players[game.turn];
-
-        document.getElementById('dice-display').innerHTML = `${["⚀","⚁","⚂","⚃","⚄","⚅"][d1-1]} ${["⚀","⚁","⚂","⚃","⚄","⚅"][d2-1]}`;
-
-        if(p.jailed) {
-            if(d1 === d2) { p.jailed = false; p.logs.push("Saiu da prisão com duplo!"); }
-            else { p.logs.push("Ainda preso..."); nextTurn(); return; }
-        }
-
-        for(let s=0; s<total; s++) {
+    if(d1===d2 && ++game.doubles === 3) {
+        p.pos = 10; p.jailed = true; game.doubles = 0;
+    } else {
+        if(d1!==d2) game.doubles = 0;
+        for(let i=0; i<(d1+d2); i++) {
             p.pos = (p.pos + 1) % 40;
-            if(p.pos === 0) { p.cash += 200; p.logs.push("Recebeu $200 (Partida)"); }
-            updatePawns();
-            await new Promise(r => setTimeout(r, 150));
+            if(p.pos === 0) { p.cash += 200; playSound(800, 'sine', 0.2); spawnMoney(); }
+            updateUI();
+            await new Promise(r => setTimeout(r, 120));
         }
-
-        processTile(p);
-        updateHUD();
-        
-        btn.disabled = false;
-        btn.innerText = "PASSAR VEZ";
-        btn.onclick = nextTurn;
+        checkTile(p);
     }
 
-    function processTile(p) {
-        const tile = TABULEIRO[p.pos];
-        const prop = game.props[p.pos];
+    updateHUD();
+    btn.disabled = false; btn.innerText = "PASSAR VEZ"; btn.onclick = nextTurn;
+}
 
-        if(tile.t === "tax") { p.cash -= tile.p; p.logs.push(`Pagou ${tile.n}: $${tile.p}`); }
-        else if(tile.t === "gotojail") { p.pos = 10; p.jailed = true; p.logs.push("FUI PRESO!"); }
-        else if(prop && prop.owner !== game.turn && !prop.mortgaged) {
-            let rent = tile.r ? tile.r[prop.level] : 50;
-            p.cash -= rent; game.players[prop.owner].cash += rent;
-            p.logs.push(`Pagou $${rent} de aluguel`);
-        } else if(tile.p && !prop) {
-            showModalProperty(p.pos);
-        }
+function checkTile(p) {
+    const t = TABULEIRO[p.pos], pr = game.props[p.pos];
+    if(t.t === "tax") { p.cash -= t.p; playSound(100, 'sawtooth', 0.3); }
+    else if(t.t === "jail") { p.pos = 10; p.jailed = true; }
+    else if(t.t === "card") {
+        const card = SORTE_COFRE[Math.floor(Math.random()*SORTE_COFRE.length)];
+        setTimeout(() => alert(`${t.n}: ${card.t}`), 500);
+        if(card.jail) { p.pos = 10; p.jailed = true; } else { p.cash += card.v; if(card.v > 0) spawnMoney(); }
     }
+    else if(pr && pr.owner !== game.turn && !pr.mort) {
+        let rent = t.r[pr.lvl];
+        p.cash -= rent; game.players[pr.owner].cash += rent;
+        playSound(400, 'sine', 0.2); spawnMoney();
+    } else if(t.p && !pr) showProperty(p.pos);
+}
 
-    function showModalProperty(idx) {
-        const tile = TABULEIRO[idx];
-        const prop = game.props[idx];
-        const p = game.players[game.turn];
-        
-        let html = `<h2>${tile.n}</h2>`;
-        let footer = "";
+function showProperty(i) {
+    const t = TABULEIRO[i], pr = game.props[i], p = game.players[game.turn];
+    if(!t.p) return;
+    let h = `<h2>${t.n}</h2>`;
+    let f = "";
 
-        if(!prop) {
-            html += `<p>Preço: <b>$${tile.p}</b></p>`;
-            footer = `<button class="btn btn-main" onclick="buy(${idx})">COMPRAR</button>`;
-        } else if(prop.owner === game.turn) {
-            html += `<p>Seu Imóvel</p><p>Renda atual: $${tile.r[prop.level]}</p>`;
-            if(!prop.mortgaged) {
-                if(tile.b && prop.level < 5) footer += `<button class="btn btn-main" onclick="build(${idx})">CONSTRUIR ($${tile.b})</button>`;
-                footer += `<button class="btn" style="background:#444;color:#fff;margin-top:5px;width:100%" onclick="mortgage(${idx})">HIPOTECAR (+$${tile.p/2})</button>`;
-            } else {
-                footer += `<button class="btn btn-main" onclick="unmortgage(${idx})">QUITAR ($${(tile.p/2)*1.1})</button>`;
-            }
+    if(!pr) {
+        h += `<p>Preço: <b>$${t.p}</b></p>`;
+        if(p.cash >= t.p) f = `<button class="roll-btn" onclick="buy(${i})">COMPRAR</button>`;
+    } else if(pr.owner === game.turn) {
+        h += `<p>Nível: ${pr.lvl === 5 ? 'HOTEL' : pr.lvl + ' CASAS'}</p>`;
+        if(!pr.mort) {
+            if(t.b && pr.lvl < 5) f += `<button class="roll-btn" onclick="build(${i})">CONSTRUIR ($${t.b})</button>`;
+            f += `<button class="roll-btn" style="background:#444;color:white;margin-top:5px;width:100%" onclick="mortgage(${i})">HIPOTECAR</button>`;
         } else {
-            html += `<p>Dono: ${game.players[prop.owner].name}</p>`;
-        }
-
-        document.getElementById('modal-body').innerHTML = html;
-        document.getElementById('modal-footer').innerHTML = footer;
-        document.getElementById('modal-overlay').style.display = 'flex';
-    }
-
-    function buy(idx) {
-        let p = game.players[game.turn];
-        if(p.cash >= TABULEIRO[idx].p) {
-            p.cash -= TABULEIRO[idx].p;
-            game.props[idx] = { owner: game.turn, level: 0, mortgaged: false };
-            p.logs.push(`Comprou ${TABULEIRO[idx].n}`);
-            closeModal(); updateHUD(); updatePawns();
+            f += `<button class="roll-btn" onclick="unmortgage(${i})">RESGATAR</button>`;
         }
     }
+    document.getElementById('m-body').innerHTML = h;
+    document.getElementById('m-footer').innerHTML = f;
+    document.getElementById('overlay').style.display = 'flex';
+}
 
-    function build(idx) {
-        let p = game.players[game.turn];
-        if(p.cash >= TABULEIRO[idx].b) {
-            p.cash -= TABULEIRO[idx].b;
-            game.props[idx].level++;
-            p.logs.push(`Construiu em ${TABULEIRO[idx].n}`);
-            closeModal(); updateHUD(); updatePawns();
-        }
-    }
+function buy(i) { game.players[game.turn].cash -= TABULEIRO[i].p; game.props[i] = {owner:game.turn, lvl:0, mort:false}; closeM(); updateUI(); updateHUD(); }
+function build(i) { game.players[game.turn].cash -= TABULEIRO[i].b; game.props[i].lvl++; closeM(); updateUI(); updateHUD(); playSound(600, 'sine', 0.1); }
+function mortgage(i) { game.players[game.turn].cash += TABULEIRO[i].p/2; game.props[i].mort = true; closeM(); updateUI(); updateHUD(); }
+function unmortgage(i) { game.players[game.turn].cash -= (TABULEIRO[i].p/2)*1.1; game.props[i].mort = false; closeM(); updateUI(); updateHUD(); }
 
-    function mortgage(idx) {
-        let p = game.players[game.turn];
-        p.cash += TABULEIRO[idx].p / 2;
-        game.props[idx].mortgaged = true;
-        p.logs.push(`Hipotecou ${TABULEIRO[idx].n}`);
-        closeModal(); updateHUD(); updatePawns();
-    }
+function loan(id) { game.players[id].cash += 500; playSound(900, 'sine', 0.2); spawnMoney(); updateHUD(); }
 
-    function nextTurn() {
-        game.turn = (game.turn + 1) % game.players.length;
-        const btn = document.getElementById('roll-btn');
-        btn.innerText = "JOGAR DADOS";
-        btn.onclick = rollDice;
-        closeModal();
-        updateHUD();
-    }
+function nextTurn() {
+    game.turn = (game.turn + 1) % game.players.length; game.doubles = 0;
+    const btn = document.getElementById('main-btn'); btn.innerText = "LANÇAR DADOS"; btn.onclick = play;
+    updateHUD();
+}
 
-    function updateHUD() {
-        const hud = document.getElementById('hud-players');
-        hud.innerHTML = game.players.map((p, i) => `
-            <div class="mini-player-card ${game.turn === i ? 'active' : ''}">
-                <div style="font-size:18px">${p.avatar}</div>
-                <div style="font-weight:800; font-size:12px">${p.name}</div>
-                <div style="color:var(--primary); font-weight:800">$${p.cash}</div>
-                <div class="log-area">${p.logs.slice(-3).reverse().map(l => `<div>• ${l}</div>`).join('')}</div>
-            </div>
-        `).join('');
-        document.getElementById('turn-info').innerText = `VEZ DE: ${game.players[game.turn].name}`;
-    }
+function updateHUD() {
+    document.getElementById('hud').innerHTML = game.players.map((p,i) => `
+        <div class="p-card ${game.turn===i?'active':''}">
+            <div style="font-size:24px">${p.avatar}</div>
+            <div style="font-size:10px; font-weight:800">${p.name}</div>
+            <div class="cash">$${p.cash}</div>
+            <button onclick="loan(${i})" style="font-size:8px; background:none; border:1px solid #444; color:white; border-radius:5px; padding:2px; margin-top:5px">EMPRÉSTIMO $500</button>
+        </div>`).join('');
+}
 
-    function updatePawns() {
-        document.querySelectorAll('.pawn-grid, [id^="build-"]').forEach(el => el.innerHTML = "");
-        game.players.forEach(p => {
-            const span = document.createElement('span'); span.className = 'pawn'; span.innerHTML = p.avatar;
-            document.getElementById(`pg-${p.pos}`).appendChild(span);
-        });
-        Object.keys(game.props).forEach(idx => {
-            const pr = game.props[idx];
-            const tile = document.getElementById(`tile-${idx}`);
-            tile.style.boxShadow = `inset 0 0 0 3px ${['#ff4757','#1e90ff','#2ed573','#ffa502','#a29bfe','#fd79a8','#feca57','#54a0ff','#5f27cd','#48dbfb'][pr.owner % 10]}`;
-            if(pr.mortgaged) tile.style.opacity = "0.5";
-            else document.getElementById(`build-${idx}`).innerHTML = pr.level === 5 ? "🏨" : "🏠".repeat(pr.level);
-        });
-    }
-
-    function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
-    function handleTileClick(idx) { showModalProperty(idx); }
+function updateUI() {
+    document.querySelectorAll('.pawn-zone, [id^="build-"]').forEach(c => c.innerHTML = "");
+    game.players.forEach(p => {
+        const span = document.createElement('div'); span.className = 'pawn'; span.innerHTML = p.avatar;
+        document.getElementById(`pz-${p.pos}`).appendChild(span);
+    });
+    Object.keys(game.props).forEach(i => {
+        const pr = game.props[i], tile = document.getElementById(`tile-${i}`);
+        tile.style.boxShadow = `inset 0 0 0 4px ${game.players[pr.owner].color}`;
+        if(pr.mort) tile.style.opacity = "0.4";
+        else document.getElementById(`build-${i}`).innerHTML = pr.lvl === 5 ? "🏨" : "🏠".repeat(pr.lvl);
+    });
+}
+function closeM() { document.getElementById('overlay').style.display = 'none'; }
 </script>
 </body>
 </html>
