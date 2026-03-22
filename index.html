@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monopoly Elite</title>
+    <title>Monopoly Elite Pro - Final Version</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,89 +11,71 @@
             --bg: #050505; --glass: rgba(255, 255, 255, 0.1);
             --p0: #2ecc71; --p1: #e91e63; --p2: #3498db; --p3: #f1c40f; 
             --p4: #9b59b6; --p5: #e67e22; --p6: #1abc9c; --p7: #ecf0f1;
-            --p8: #34495e; --p9: #ff7675;
         }
 
         * { box-sizing: border-box; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
 
-        /* LOBBY MODERNO */
-        #setup-screen { 
-            position: fixed; inset: 0; background: radial-gradient(circle at top, #1a1a2e, #050505); 
-            z-index: 2000; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; 
-        }
-        .setup-card { 
-            background: var(--glass); border: 1px solid rgba(255,255,255,0.1); 
-            padding: 20px; border-radius: 24px; backdrop-filter: blur(15px); width: 100%; max-width: 400px; text-align: center;
-        }
-        .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; width: 100%; max-width: 1100px; margin-top: 20px; }
-        .config-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
-        .name-input { width: 100%; background: #111; border: 2px solid #333; color: white; padding: 12px; border-radius: 12px; font-weight: bold; margin: 10px 0; outline: none; }
-        .name-input:focus { border-color: var(--primary); }
-        
-        /* BOARD & UI */
-        #players-bar { display: flex; gap: 10px; width: 100%; padding: 15px; overflow-x: auto; scrollbar-width: none; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .p-badge { min-width: 120px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 18px; text-align: center; border: 2px solid transparent; transition: 0.4s; position: relative; }
+        /* LOBBY */
+        #setup-screen { position: fixed; inset: 0; background: radial-gradient(circle at top, #1a1a2e, #050505); z-index: 2000; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .setup-card { background: var(--glass); border: 1px solid rgba(255,255,255,0.1); padding: 20px; border-radius: 24px; backdrop-filter: blur(15px); width: 100%; max-width: 400px; text-align: center; }
+        .setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; width: 100%; max-width: 800px; margin-top: 20px; overflow-y: auto; }
+        .config-item { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        .name-input { width: 100%; background: #111; border: 1px solid #444; color: white; padding: 8px; border-radius: 8px; font-size: 12px; margin-bottom: 5px; outline: none; }
+
+        /* PLAYERS BAR */
+        #players-bar { display: flex; gap: 10px; width: 100%; padding: 12px; overflow-x: auto; scrollbar-width: none; background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .p-badge { min-width: 100px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 18px; text-align: center; border: 2px solid transparent; cursor: pointer; transition: 0.3s; }
         .p-badge.active { border-color: var(--primary); background: rgba(0, 210, 255, 0.1); transform: scale(1.05); }
-        .p-badge .status-tag { position: absolute; top: -5px; right: -5px; background: #e74c3c; font-size: 8px; padding: 2px 6px; border-radius: 10px; display: none; }
 
-        .board-container { position: relative; width: 94vw; height: 94vw; max-width: 480px; max-height: 480px; margin-top: 10px; }
-        #board { 
-            display: grid; width: 100%; height: 100%; 
-            grid-template-columns: 1.3fr repeat(9, 1fr) 1.3fr; grid-template-rows: 1.3fr repeat(9, 1fr) 1.3fr; 
-            background: #e0e0e0; border: 5px solid #222; border-radius: 15px; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8); transform: perspective(1200px) rotateX(15deg);
-        }
+        /* BOARD */
+        .board-container { position: relative; width: 92vw; height: 92vw; max-width: 420px; max-height: 420px; margin-top: 10px; }
+        #board { display: grid; width: 100%; height: 100%; grid-template-columns: 1.3fr repeat(9, 1fr) 1.3fr; grid-template-rows: 1.3fr repeat(9, 1fr) 1.3fr; background: #eee; border: 4px solid #222; border-radius: 10px; }
         
-        .tile { border: 0.5px solid rgba(0,0,0,0.15); position: relative; display: flex; flex-direction: column; background: #fff; }
-        .tile-header { height: 22%; width: 100%; border-bottom: 1px solid rgba(0,0,0,0.1); position: relative; }
+        .tile { border: 0.1px solid rgba(0,0,0,0.1); position: relative; display: flex; flex-direction: column; background: #fff; justify-content: space-between; transition: 0.3s; }
+        .tile-header { height: 25%; width: 100%; }
         .tile-name { flex: 1; font-size: 5px; text-transform: uppercase; font-weight: 900; display: flex; align-items: center; justify-content: center; text-align: center; color: #222; padding: 2px; }
-        
-        /* CONSTRUÇÕES */
+        .owner-bar { height: 5px; width: 100%; transition: 0.3s; }
+
         .build-slots { position: absolute; top: 1px; left: 0; width: 100%; display: flex; justify-content: center; gap: 1px; }
-        .house { width: 4px; height: 4px; background: #2ecc71; border-radius: 1px; }
-        .hotel { width: 10px; height: 4px; background: #e74c3c; border-radius: 1px; }
+        .house { width: 4px; height: 4px; background: #2ecc71; border-radius: 50%; }
+        .hotel { width: 10px; height: 4px; background: #e74c3c; border-radius: 2px; }
 
-        .pawn { 
-            position: absolute; font-size: 24px; z-index: 100; pointer-events: none;
-            transition: all 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28); filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
-        }
+        .pawn { position: absolute; font-size: 20px; z-index: 100; transition: all 0.4s ease; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
 
-        /* CONTROLES */
-        .action-zone { display: flex; align-items: center; gap: 20px; margin-top: 20px; }
-        .dice-box { background: white; padding: 10px; border-radius: 15px; display: flex; gap: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        .die { font-size: 32px; color: #333; transition: 0.2s; }
-        .btn-main { 
-            width: 80px; height: 80px; border-radius: 50%; border: none;
-            background: linear-gradient(135deg, var(--primary), var(--accent)); color: white;
-            font-size: 18px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 0 #1a5b99;
-        }
-        .btn-main:active { transform: translateY(4px); box-shadow: 0 2px 0 #1a5b99; }
-        .btn-secondary { padding: 12px 20px; border-radius: 30px; border: none; background: var(--glass); color: white; cursor: pointer; font-weight: 700; }
+        /* UI CONTROLS */
+        .action-zone { display: flex; align-items: center; gap: 15px; margin-top: 15px; }
+        .btn-main { width: 70px; height: 70px; border-radius: 50%; border: none; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; font-weight: 900; cursor: pointer; box-shadow: 0 5px 0 #1a5b99; }
+        .btn-main:active { transform: translateY(3px); box-shadow: 0 1px 0 #1a5b99; }
+        .btn-secondary { padding: 10px 15px; border-radius: 15px; background: var(--glass); border: 1px solid rgba(255,255,255,0.1); color: white; font-size: 11px; font-weight: 700; cursor: pointer; }
+
+        /* ANIMATIONS */
+        @keyframes buy-flash { 0% { background: white; } 50% { background: var(--gold); } 100% { background: white; } }
+        .flash-buy { animation: buy-flash 0.6s ease-out; }
+        .shake { animation: shake 0.3s infinite; }
+        @keyframes shake { 0% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } 100% { transform: rotate(-3deg); } }
 
         /* MODAL */
         #modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; z-index: 3000; backdrop-filter: blur(10px); }
-        .modal-ui { 
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            background: white; color: #111; padding: 30px; border-radius: 30px; 
-            width: 90%; max-width: 380px; text-align: center; display: none; z-index: 3001; 
-        }
-        .modal-btn { padding: 14px 20px; border-radius: 12px; border: none; font-weight: 800; margin: 5px; cursor: pointer; color: white; width: 100%; max-width: 200px; }
-
-        .shake { animation: shake 0.4s infinite; }
-        @keyframes shake { 0% { transform: rotate(0); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } }
+        .modal-ui { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; color: #111; padding: 25px; border-radius: 25px; width: 85%; max-width: 320px; display: none; z-index: 3001; text-align: center; }
+        .modal-btn { padding: 12px; border-radius: 12px; border: none; font-weight: 800; cursor: pointer; color: white; width: 100%; margin-top: 8px; }
+        
+        /* LOG STYLES */
+        .log-container { max-height: 180px; overflow-y: auto; background: #f4f4f4; padding: 10px; border-radius: 12px; font-size: 11px; text-align: left; margin: 10px 0; border: 1px solid #ddd; }
+        .gain { color: #2ecc71; font-weight: bold; }
+        .loss { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="setup-screen">
     <div class="setup-card">
-        <h1 style="color:var(--gold); margin:0">ELITE MONOPOLY</h1>
-        <p>Selecione os Jogadores (2-10)</p>
-        <input type="number" id="qty" value="4" min="2" max="10" onchange="renderLobby()" style="background:#000; color:#fff; border:1px solid #444; padding:8px; border-radius:8px; width:60px; text-align:center">
+        <h1 style="color:var(--gold); margin:0; font-size: 22px;">MONOPOLY ELITE</h1>
+        <p style="font-size: 12px;">Selecione o número de jogadores:</p>
+        <input type="number" id="qty" value="2" min="2" max="8" onchange="renderLobby()" style="background:#000; color:#fff; border:1px solid #444; padding:5px; border-radius:5px; width:60px; text-align:center">
     </div>
     <div class="setup-grid" id="lobby-grid"></div>
-    <button class="modal-btn" style="background:var(--gold); color:#000; margin-top:20px; width:300px" onclick="initGame()">INICIAR PARTIDA</button>
+    <button class="modal-btn" style="background:var(--gold); color:#000; width:200px; margin-top:20px" onclick="initGame()">INICIAR PARTIDA</button>
 </div>
 
 <div id="players-bar"></div>
@@ -101,30 +83,44 @@
 <div class="board-container">
     <div id="board">
         <div style="grid-column: 4/9; grid-row: 5/8; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10;">
-            <div class="dice-box" id="dice-container">
-                <div class="die" id="die1">⚀</div>
-                <div class="die" id="die2">⚀</div>
+            <div id="dice-container" style="display:flex; gap:10px; background:#fff; padding:12px; border-radius:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2)">
+                <div class="die" id="die1" style="font-size:30px; color:#222">⚀</div>
+                <div class="die" id="die2" style="font-size:30px; color:#222">⚀</div>
             </div>
-            <p id="game-status" style="font-size:10px; margin-top:10px; color:#222; font-weight:700"></p>
+            <p id="game-status" style="font-size:10px; margin-top:10px; color:#222; font-weight:900; text-transform: uppercase;"></p>
         </div>
     </div>
     <div id="pawns-layer"></div>
 </div>
 
 <div class="action-zone">
-    <button class="btn-secondary" onclick="manageProperties()">PROPRIEDADES</button>
+    <button class="btn-secondary" onclick="manageProperties()">CASAS</button>
     <button class="btn-main" id="roll-btn" onclick="handlePlay()">GO!</button>
-    <button class="btn-secondary" onclick="payDebt()">QUITAR</button>
+    <button class="btn-secondary" onclick="openBank()">BANCO</button>
 </div>
 
 <div id="modal-overlay"></div>
 <div class="modal-ui" id="modal">
-    <h2 id="m-title" style="margin:0 0 10px 0">Ação</h2>
-    <div id="m-body" style="font-size:14px; margin-bottom:20px; color:#444"></div>
-    <div id="m-footer"></div>
+    <h3 id="m-title" style="margin:0; font-size:18px;"></h3>
+    <div id="m-body" style="font-size:14px; margin:15px 0; color:#444;"></div>
+    <div id="m-footer" style="display:flex; flex-direction:column; gap:5px"></div>
 </div>
 
 <script>
+    // --- AUDIO SYSTEM ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if(type === 'dice') { osc.type = 'square'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); }
+        else if(type === 'buy') { osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime); }
+        else if(type === 'rent') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, audioCtx.currentTime); }
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    // --- GAME DATA ---
     const TILES = [
         {n: "PARTIDA", c: null, p: 0}, {n: "Sumaré", c: "#955436", p: 60, h: 50}, {n: "Cofre", c: null, p: 0},
         {n: "Praça da Sé", c: "#955436", p: 60, h: 50}, {n: "Imposto", c: null, p: 0}, {n: "Maracanã", c: "#333", p: 200},
@@ -141,26 +137,19 @@
         {n: "Sorte", c: null, p: 0}, {n: "Morumbi", c: "#006AB3", p: 350, h: 200}, {n: "Riqueza", c: null, p: 0}, {n: "Oscar Freire", c: "#006AB3", p: 400, h: 200}
     ];
 
-    const ICONS = ["🚗", "🚀", "🎩", "🦖", "🚢", "🐕", "🍕", "💎", "🐱", "🦆"];
+    const ICONS = ["🚗", "🚀", "🎩", "🦖", "🚢", "🐕", "🍕", "💎"];
     let players = [], turn = 0, doubleCount = 0;
 
     function renderLobby() {
         const grid = document.getElementById('lobby-grid'), qty = document.getElementById('qty').value;
         grid.innerHTML = ""; players = [];
         for(let i=0; i<qty; i++) {
-            const name = i===0?'K':i===1?'J':`Player ${i+1}`;
-            players.push({ id: i, name, icon: ICONS[i], money: 1500, pos: 0, jail: 0, props: [] });
+            players.push({ id: i, name: `Jogador ${i+1}`, icon: ICONS[i], money: 1500, pos: 0, jail: 0, debt: 0, log: ["Partida iniciada"] });
             grid.innerHTML += `<div class="config-item">
-                <input class="name-input" id="n-${i}" value="${name}">
-                <div style="font-size:30px; cursor:pointer" onclick="cycleIcon(${i})">${players[i].icon}</div>
+                <input class="name-input" id="n-${i}" value="Jogador ${i+1}">
+                <div style="font-size:24px">${players[i].icon}</div>
             </div>`;
         }
-    }
-
-    function cycleIcon(i) {
-        const cur = ICONS.indexOf(players[i].icon);
-        players[i].icon = ICONS[(cur + 1) % ICONS.length];
-        renderLobby();
     }
 
     function initGame() {
@@ -175,7 +164,7 @@
             else if(i <= 30) { div.style.gridRow = 1; div.style.gridColumn = i - 19; }
             else { div.style.gridColumn = 11; div.style.gridRow = i - 29; }
             div.innerHTML = `${t.c ? `<div class="tile-header" style="background:${t.c}"><div class="build-slots" id="build-${i}"></div></div>`:''}
-                             <div class="tile-name">${t.n}</div><div id="owner-${i}" style="height:4px"></div>`;
+                             <div class="tile-name">${t.n}</div><div class="owner-bar" id="owner-${i}"></div>`;
             b.appendChild(div);
         });
         players.forEach(p => {
@@ -186,29 +175,35 @@
         updateUI();
     }
 
+    function log(p, msg, type) { p.log.unshift(`<span class="${type}">${msg}</span>`); }
+
+    function showHistory(id) {
+        const p = players[id];
+        let content = p.log.map(l => `<div>• ${l}</div>`).join('');
+        showModal(`HISTÓRICO: ${p.name}`, `<div class="log-container">${content}</div>`, [{t: "FECHAR", c: "#333", f: closeModal}]);
+    }
+
     async function handlePlay() {
         const p = players[turn];
         if(p.jail > 0) {
-            showModal("NA PRISÃO", `Você está preso por mais ${p.jail} rodadas. Pagar $50 para sair?`, [
-                {t: "PAGAR $50", c: "#e67e22", f: () => { p.money -= 50; p.jail = 0; next(); }},
-                {t: "ESPERAR", c: "#95a5a6", f: () => { p.jail--; next(); }}
-            ]);
-            return;
+            showModal("PRESO", "Pagar $50 para sair?", [
+                {t: "PAGAR", c: "#e67e22", f: () => { p.money -= 50; p.jail = 0; log(p, "Pagou fiança", "loss"); next(); }},
+                {t: "ESPERAR", c: "#999", f: () => { p.jail--; next(); }}
+            ]); return;
         }
-
-        const btn = document.getElementById('roll-btn'); btn.disabled = true;
+        document.getElementById('roll-btn').disabled = true;
         const d1 = Math.ceil(Math.random() * 6), d2 = Math.ceil(Math.random() * 6);
         document.getElementById('dice-container').classList.add('shake');
+        
+        let i = 0; const sInt = setInterval(() => { playSound('dice'); if(i++ > 5) clearInterval(sInt); }, 100);
 
         setTimeout(async () => {
             document.getElementById('die1').innerText = ['⚀','⚁','⚂','⚃','⚄','⚅'][d1-1];
             document.getElementById('die2').innerText = ['⚀','⚁','⚂','⚃','⚄','⚅'][d2-1];
             document.getElementById('dice-container').classList.remove('shake');
-            
-            if(d1 === d2) { doubleCount++; document.getElementById('game-status').innerText = "DADOS IGUAIS! JOGA DE NOVO!"; }
+            if(d1===d2) { doubleCount++; document.getElementById('game-status').innerText = "DUPLO! JOGA DE NOVO"; }
             else { doubleCount = 0; document.getElementById('game-status').innerText = ""; }
-
-            if(doubleCount === 3) { p.pos = 10; p.jail = 3; showModal("POLÍCIA!", "3 vezes dados iguais? Vá para a prisão!", [{t: "OK", c: "#333", f: next}]); }
+            if(doubleCount === 3) { p.pos = 10; p.jail = 3; showModal("CADEIA", "3 duplos seguidos!", [{t: "OK", c: "#333", f: next}]); }
             else { await movePawn(d1 + d2); }
         }, 600);
     }
@@ -217,9 +212,8 @@
         const p = players[turn];
         for(let i=0; i<s; i++) {
             p.pos = (p.pos + 1) % 40;
-            if(p.pos === 0) p.money += 200;
-            updatePawns();
-            await new Promise(r => setTimeout(r, 200));
+            if(p.pos === 0) { p.money += 200; log(p, "Ganhou $200 (Início)", "gain"); }
+            updatePawns(); await new Promise(r => setTimeout(r, 200));
         }
         processTile();
     }
@@ -228,67 +222,69 @@
         const p = players[turn], t = TILES[p.pos];
         if(t.p > 0) {
             if(!t.owner) {
-                showModal(t.n, `Deseja comprar por $${t.p}?`, [
-                    {t: "COMPRAR", c: "#2ecc71", f: () => { 
-                        if(p.money >= t.p) { p.money -= t.p; t.owner = p; t.level = 0; document.getElementById(`owner-${p.pos}`).style.background = `var(--p${p.id})`; next(); }
-                        else alert("Sem dinheiro!");
+                showModal(t.n, `Comprar por $${t.p}?`, [
+                    {t: "COMPRAR", c: "#2ecc71", f: () => {
+                        if(p.money >= t.p) {
+                            p.money -= t.p; t.owner = p; t.level = 0;
+                            document.getElementById(`t-${p.pos}`).classList.add('flash-buy');
+                            document.getElementById(`owner-${p.pos}`).style.background = `var(--p${p.id})`;
+                            playSound('buy'); log(p, `Comprou ${t.n}`, "loss"); next();
+                        } else alert("Sem saldo!");
                     }},
                     {t: "PASSAR", c: "#999", f: next}
                 ]);
             } else if(t.owner !== p) {
-                let rent = Math.floor(t.p * 0.1) * (t.level + 1);
-                p.money -= rent; t.owner.money += rent;
-                showModal("ALUGUEL", `Pagou $${rent} para ${t.owner.name}`, [{t: "PAGAR", c: "#e91e63", f: next}]);
+                let r = Math.floor(t.p * 0.1) * (t.level + 1);
+                p.money -= r; t.owner.money += r;
+                playSound('rent'); log(p, `Pagou $${r} aluguel`, "loss");
+                showModal("ALUGUEL", `Pagou $${r} para ${t.owner.name}`, [{t: "OK", c: "#e91e63", f: next}]);
             } else next();
         } else {
-            if(p.pos === 30) { p.pos = 10; p.jail = 3; showModal("PRESO", "Vá direto para a prisão!", [{t: "FU...!", c: "#333", f: next}]); }
-            else next();
+            if(p.pos === 30) { p.pos = 10; p.jail = 3; next(); } else next();
         }
     }
 
-    function manageProperties() {
+    function openBank() {
         const p = players[turn];
-        const myProps = TILES.filter(t => t.owner === p && t.h);
-        if(myProps.length === 0) { alert("Você não tem propriedades para construir!"); return; }
-        
-        let html = myProps.map(t => `
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #eee; padding:5px">
-                <span>${t.n} (${t.level || 0}🏡)</span>
-                <button onclick="buildHouse(${TILES.indexOf(t)})" style="background:#2ecc71; color:white; border:none; padding:4px 8px; border-radius:5px">+$${t.h}</button>
-            </div>
-        `).join('');
-        showModal("CONSTRUIR", html || "Sem casas", [{t: "FECHAR", c: "#333", f: closeModal}]);
-    }
-
-    window.buildHouse = function(idx) {
-        const t = TILES[idx], p = players[turn];
-        if(p.money >= t.h && (t.level || 0) < 5) {
-            p.money -= t.h;
-            t.level = (t.level || 0) + 1;
-            const container = document.getElementById(`build-${idx}`);
-            if(t.level < 5) container.innerHTML += `<div class="house"></div>`;
-            else container.innerHTML = `<div class="hotel"></div>`;
-            updateUI();
-            manageProperties();
-        } else alert("Dinheiro insuficiente ou limite atingido!");
-    }
-
-    function payDebt() {
-        const p = players[turn];
-        showModal("BANCO", "Deseja pagar sua dívida de $500?", [
-            {t: "QUITAR $500", c: "#2ecc71", f: () => { p.money -= 500; updateUI(); closeModal(); }},
-            {t: "SAIR", c: "#999", f: closeModal}
+        showModal("BANCO ELITE", `Saldo: $${p.money} | Dívida: $${p.debt}`, [
+            {t: "EMPRÉSTIMO $500", c: "#2ecc71", f: () => { p.money += 500; p.debt += 600; log(p, "Pegou $500 emprestado", "gain"); updateUI(); closeModal(); }},
+            {t: "QUITAR DÍVIDA", c: "#e67e22", f: () => {
+                if(p.money >= p.debt) { p.money -= p.debt; p.debt = 0; updateUI(); closeModal(); } else alert("Saldo insuficiente!");
+            }},
+            {t: "FECHAR", c: "#333", f: closeModal}
         ]);
+    }
+
+    function manageProperties() {
+        const p = players[turn]; const props = TILES.filter(t => t.owner === p && t.h);
+        if(!props.length) return alert("Sem propriedades!");
+        let h = props.map(t => `
+            <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee">
+                <span>${t.n}</span>
+                <button onclick="build(${TILES.indexOf(t)})" style="background:#2ecc71; color:white; border:none; padding:5px; border-radius:5px">+$${t.h}</button>
+            </div>`).join('');
+        showModal("CONSTRUIR", h, [{t: "FECHAR", c: "#333", f: closeModal}]);
+    }
+
+    window.build = function(idx) {
+        const t = TILES[idx], p = players[turn];
+        if(p.money >= t.h && t.level < 5) {
+            p.money -= t.h; t.level++;
+            const c = document.getElementById(`build-${idx}`);
+            if(t.level < 5) c.innerHTML += `<div class="house"></div>`;
+            else c.innerHTML = `<div class="hotel"></div>`;
+            updateUI(); manageProperties();
+        }
     }
 
     function updateUI() {
         const bar = document.getElementById('players-bar');
         bar.innerHTML = players.map(p => `
-            <div class="p-badge ${turn===p.id?'active':''}">
-                <div class="status-tag" style="display:${p.jail>0?'block':'none'}">PRESO</div>
-                <div style="font-size:24px">${p.icon}</div>
-                <div style="font-size:12px"><b>${p.name}</b></div>
+            <div class="p-badge ${turn===p.id?'active':''}" onclick="showHistory(${p.id})">
+                <div style="font-size:20px">${p.icon}</div>
+                <div style="font-size:10px"><b>${p.name}</b></div>
                 <div style="color:#2ecc71; font-weight:900">$${p.money}</div>
+                ${p.debt > 0 ? `<div style="color:red; font-size:8px">Débito: $${p.debt}</div>` : ''}
             </div>`).join('');
         updatePawns();
     }
@@ -302,26 +298,16 @@
     }
 
     function showModal(t, b, btns) {
-        document.getElementById('m-title').innerText = t;
-        document.getElementById('m-body').innerHTML = b;
+        document.getElementById('m-title').innerText = t; document.getElementById('m-body').innerHTML = b;
         const f = document.getElementById('m-footer'); f.innerHTML = "";
         btns.forEach(btn => {
-            const el = document.createElement('button');
-            el.className = "modal-btn"; el.innerText = btn.t; el.style.background = btn.c;
-            el.onclick = btn.f; f.appendChild(el);
+            const el = document.createElement('button'); el.className = "modal-btn"; el.innerText = btn.t; el.style.background = btn.c; el.onclick = btn.f; f.appendChild(el);
         });
-        document.getElementById('modal-overlay').style.display = 'block';
-        document.getElementById('modal').style.display = 'block';
+        document.getElementById('modal-overlay').style.display = 'block'; document.getElementById('modal').style.display = 'block';
     }
 
     function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; document.getElementById('modal').style.display = 'none'; }
-    
-    function next() {
-        closeModal();
-        if(doubleCount === 0) turn = (turn + 1) % players.length;
-        document.getElementById('roll-btn').disabled = false;
-        updateUI();
-    }
+    function next() { closeModal(); if(doubleCount === 0) turn = (turn + 1) % players.length; document.getElementById('roll-btn').disabled = false; updateUI(); }
 
     renderLobby();
 </script>
