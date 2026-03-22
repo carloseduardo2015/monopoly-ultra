@@ -3,25 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monopoly Brasil - Edição Definitiva</title>
+    <title>Monopoly Brasil - Versão Estável</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #00eb84; --bg: #0b0e14; --card: #1c222d; --text: #ffffff; --board-bg: #cee6d5; --edge: #222; --gold: #f1c40f; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 5px; overflow-x: hidden; }
-        @keyframes jump { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
-
-        /* SETUP */
+        
         #setup-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .setup-container { width: 100%; max-width: 500px; background: var(--card); padding: 25px; border-radius: 25px; text-align: center; border: 1px solid #333; }
         .player-config-grid { display: grid; grid-template-columns: 1fr; gap: 10px; max-height: 300px; overflow-y: auto; margin: 15px 0; }
         .player-config-card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; display: flex; gap: 10px; align-items: center; }
         .player-config-card input { flex: 1; background: #000; border: 1px solid #444; color: white; padding: 8px; border-radius: 8px; }
 
-        /* TABULEIRO */
         .game-layout { display: none; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
-        @media (min-width: 1000px) { .game-layout { flex-direction: row; align-items: flex-start; justify-content: center; } }
-
         #board-container {
             position: relative; width: 98vw; height: 98vw; max-width: 600px; max-height: 600px;
             background: var(--board-bg); border: 6px solid var(--edge); display: grid;
@@ -31,23 +26,22 @@
         .bar { width: 100%; height: 12px; border-bottom: 1px solid #000; }
         .pawn-grid { position: absolute; bottom: 2px; width: 100%; height: 50%; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; justify-items: center; }
         .pawn { font-size: 14px; transition: 0.2s; z-index: 5; }
-        .pawn.moving { animation: jump 0.2s ease; }
         .board-center { grid-column: 2 / 11; grid-row: 2 / 11; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
 
-        /* SIDEBAR E HISTÓRICO */
-        .players-sidebar { display: grid; grid-template-columns: 1fr; gap: 10px; width: 98vw; max-width: 500px; }
-        @media (min-width: 600px) { .players-sidebar { grid-template-columns: 1fr 1fr; } }
-        .p-card { background: var(--card); padding: 12px; border-radius: 18px; border: 4px solid transparent; transition: 0.3s; }
-        .p-card.active { border-color: var(--primary); background: #242b38; }
-        .p-history { margin-top: 8px; background: rgba(0,0,0,0.3); height: 60px; overflow-y: auto; font-size: 9px; color: #94a3b8; padding: 5px; border-radius: 8px; border: 1px solid #333; }
+        /* CARTA QUE TRAVAVA - AGORA COM CLICK PARA FECHAR */
+        #overlay-card { 
+            position: absolute; width: 90%; background: white; color: black; padding: 20px; 
+            border-radius: 15px; border: 5px solid var(--gold); display: none; z-index: 1000; 
+            text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); cursor: pointer;
+        }
+        #overlay-card::after { content: "Pressione para continuar"; display: block; font-size: 10px; margin-top: 15px; color: #666; font-weight: bold; }
 
-        /* BOTÕES */
-        .btn { border: none; border-radius: 50px; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .btn-main { background: var(--gold); color: #000; padding: 12px 30px; box-shadow: 0 4px 0 #b7950b; font-size: 14px; }
-        .btn-action { background: var(--primary); color: #000; padding: 8px 15px; margin-top: 8px; font-size: 11px; }
-        .btn-loan { background: #4a5568; color: #fff; font-size: 9px; padding: 4px; margin-top: 5px; width: 100%; }
-
-        #overlay-card { position: absolute; width: 85%; background: white; color: black; padding: 15px; border-radius: 15px; border: 4px solid var(--gold); display: none; z-index: 100; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .players-sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 98vw; max-width: 600px; margin-top: 10px; }
+        .p-card { background: var(--card); padding: 10px; border-radius: 15px; border: 3px solid transparent; }
+        .p-card.active { border-color: var(--primary); }
+        .btn { border: none; border-radius: 50px; font-weight: 800; cursor: pointer; }
+        .btn-main { background: var(--gold); color: #000; padding: 12px 25px; box-shadow: 0 4px 0 #b7950b; }
+        .btn-action { background: var(--primary); color: #000; padding: 10px; margin-top: 5px; width: 100%; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -55,63 +49,44 @@
     <div id="setup-screen">
         <div class="setup-container">
             <h1 style="color:var(--primary)">MONOPOLY BRASIL</h1>
-            <p>Escolha o número de jogadores (2-8):</p>
-            <input type="number" id="qty" value="2" min="2" max="8" onchange="gerarConfig()" style="padding:8px; border-radius:10px; width:70px; text-align: center;">
+            <p>Jogadores (2-8):</p>
+            <input type="number" id="qty" value="2" min="2" max="8" onchange="gerarConfig()" style="padding:10px; width:60px;">
             <div id="config-area" class="player-config-grid"></div>
-            <button onclick="iniciarJogo()" class="btn btn-main" style="width:100%">COMEÇAR JOGO</button>
+            <button onclick="iniciarJogo()" class="btn btn-main" style="width:100%">JOGAR</button>
         </div>
     </div>
 
     <div class="game-layout" id="game-ui">
         <div id="board-container">
+            <div id="overlay-card" onclick="fecharCarta()"></div>
             <div class="board-center">
-                <div id="overlay-card"></div>
-                <div id="dice-view" style="font-size:40px;">🎲</div>
+                <div id="dice-view" style="font-size:35px; margin-bottom:10px;">🎲</div>
                 <button id="roll-btn" class="btn btn-main" onclick="rolarDados()">ROLAR DADOS</button>
                 <button id="buy-btn" class="btn btn-action" style="display:none" onclick="comprarProp()"></button>
-                <p id="turn-msg" style="color:#000; font-weight:900; margin-top:10px; font-size:11px;"></p>
             </div>
         </div>
         <div class="players-sidebar" id="sidebar"></div>
     </div>
 
     <script>
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const AVATARES = ["🏎️", "🎩", "🐕", "🦖", "🚢", "🐈", "🦆", "🛵"];
         const CORES = ["#ff4757", "#1e90ff", "#2ed573", "#ffa502", "#a29bfe", "#fd79a8", "#fab1a0", "#00cec9"];
 
-        // CARTAS DE SORTE E COFRE OFICIAIS
-        const CARTAS_SORTE = [
-            {t:"Avance até o Início (Receba $200)", f: (j) => moverPara(j, 0)},
-            {t:"Vá para a Prisão sem passar pelo Início", f: (j) => moverPara(j, 10)},
-            {t:"Avance até o Metrô Carioca", f: (j) => moverPara(j, 15)},
-            {t:"Sua apólice de seguro venceu: Receba $100", f: (j) => j.saldo += 100},
-            {t:"Pague o IPTU: $25 por casa, $100 por hotel", f: (j) => pagarReparos(j, 25, 100)},
-            {t:"Multa por excesso de velocidade: Pague $15", f: (j) => j.saldo -= 15},
-            {t:"Avance até a Vieira Souto", f: (j) => moverPara(j, 11)}
-        ];
-
-        // TABULEIRO COMPLETO [base, 1 casa, 2 casas, 3 casas, 4 casas, hotel]
         const TABULEIRO = [
-            {n:"PARTIDA"}, 
-            {n:"AV. SUMARÉ", c:"#955436", p:60, b:50, r:[2, 10, 30, 90, 160, 250]}, {n:"COFRE"}, 
-            {n:"PRAÇA DA SÉ", c:"#955436", p:60, b:50, r:[4, 20, 60, 180, 320, 450]}, 
-            {n:"IMPOSTO", p:200}, {n:"METRÔ MARACANÃ", p:200, tipo:"metro"}, 
-            {n:"25 DE MARÇO", c:"#aae0fa", p:100, b:50, r:[6, 30, 90, 270, 400, 550]}, {n:"SORTE"}, 
-            {n:"AV. SÃO JOÃO", c:"#aae0fa", p:100, b:50, r:[6, 30, 90, 270, 400, 550]}, {n:"AV. PAULISTA", c:"#aae0fa", p:120, b:50, r:[8, 40, 100, 300, 450, 600]},
-            {n:"PRISÃO"}, 
+            {n:"PARTIDA"}, {n:"AV. SUMARÉ", c:"#955436", p:60, b:50, r:[2, 10, 30, 90, 160, 250]}, {n:"COFRE"}, 
+            {n:"PRAÇA DA SÉ", c:"#955436", p:60, b:50, r:[4, 20, 60, 180, 320, 450]}, {n:"IMPOSTO", p:200}, 
+            {n:"METRÔ MARACANÃ", p:200, tipo:"metro"}, {n:"25 DE MARÇO", c:"#aae0fa", p:100, b:50, r:[6, 30, 90, 270, 400, 550]}, 
+            {n:"SORTE"}, {n:"AV. SÃO JOÃO", c:"#aae0fa", p:100, b:50, r:[6, 30, 90, 270, 400, 550]}, 
+            {n:"AV. PAULISTA", c:"#aae0fa", p:120, b:50, r:[8, 40, 100, 300, 450, 600]}, {n:"PRISÃO"}, 
             {n:"VIEIRA SOUTO", c:"#d93a96", p:140, b:100, r:[10, 50, 150, 450, 625, 750]}, {n:"CIA ELÉTRICA", p:150, tipo:"util"}, 
             {n:"NITEROI", c:"#d93a96", p:140, b:100, r:[10, 50, 150, 450, 625, 750]}, {n:"ATLÂNTICA", c:"#d93a96", p:160, b:100, r:[12, 60, 180, 500, 700, 900]}, 
-            {n:"METRÔ CARIOCA", p:200, tipo:"metro"}, 
-            {n:"JK", c:"#f7941d", p:180, b:100, r:[14, 70, 200, 550, 750, 950]}, {n:"COFRE"}, 
+            {n:"METRÔ CARIOCA", p:200, tipo:"metro"}, {n:"JK", c:"#f7941d", p:180, b:100, r:[14, 70, 200, 550, 750, 950]}, {n:"COFRE"}, 
             {n:"BERRINI", c:"#f7941d", p:180, b:100, r:[14, 70, 200, 550, 750, 950]}, {n:"FARIA LIMA", c:"#f7941d", p:200, b:100, r:[16, 80, 220, 600, 800, 1000]},
-            {n:"ESTAC. GRÁTIS"}, 
-            {n:"IPANEMA", c:"#ed1c24", p:220, b:150, r:[18, 90, 250, 700, 875, 1050]}, {n:"SORTE"}, 
+            {n:"ESTAC. GRÁTIS"}, {n:"IPANEMA", c:"#ed1c24", p:220, b:150, r:[18, 90, 250, 700, 875, 1050]}, {n:"SORTE"}, 
             {n:"LEBLON", c:"#ed1c24", p:220, b:150, r:[18, 90, 250, 700, 875, 1050]}, {n:"COPACABANA", c:"#ed1c24", p:240, b:150, r:[20, 100, 300, 750, 925, 1100]}, 
-            {n:"METRÔ CONSOLAÇÃO", p:200, tipo:"metro"}, 
-            {n:"CIDADE JARDIM", c:"#fef200", p:260, b:150, r:[22, 110, 330, 800, 975, 1150]}, {n:"PACAEMBU", c:"#fef200", p:260, b:150, r:[22, 110, 330, 800, 975, 1150]}, 
-            {n:"ÁGUA", p:150, tipo:"util"}, {n:"IBIRAPUERA", c:"#fef200", p:280, b:150, r:[24, 120, 360, 850, 1025, 1200]},
-            {n:"VÁ PRISÃO"}, 
+            {n:"METRÔ CONSOLAÇÃO", p:200, tipo:"metro"}, {n:"CIDADE JARDIM", c:"#fef200", p:260, b:150, r:[22, 110, 330, 800, 975, 1150]}, 
+            {n:"PACAEMBU", c:"#fef200", p:260, b:150, r:[22, 110, 330, 800, 975, 1150]}, {n:"ÁGUA", p:150, tipo:"util"}, 
+            {n:"IBIRAPUERA", c:"#fef200", p:280, b:150, r:[24, 120, 360, 850, 1025, 1200]}, {n:"VÁ PRISÃO"}, 
             {n:"BARRA", c:"#19a05e", p:300, b:200, r:[26, 130, 390, 900, 1100, 1275]}, {n:"BOTÂNICO", c:"#19a05e", p:300, b:200, r:[26, 130, 390, 900, 1100, 1275]}, 
             {n:"COFRE"}, {n:"LAGOA", c:"#19a05e", p:320, b:200, r:[28, 150, 450, 1000, 1200, 1400]}, 
             {n:"METRÔ REPÚBLICA", p:200, tipo:"metro"}, {n:"SORTE"}, 
@@ -119,39 +94,21 @@
             {n:"OSCAR FREIRE", c:"#0068a7", p:400, b:200, r:[50, 200, 600, 1400, 1700, 2000]}
         ];
 
-        let jogo = { jogadores: [], turno: 0, props: {}, dadoAtual: 0 };
-
-        function playSfx(type) {
-            try {
-                const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-                o.connect(g); g.connect(audioCtx.destination);
-                if(type === 'dice') { o.type = 'square'; o.frequency.setValueAtTime(150, audioCtx.currentTime); g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05); o.start(); o.stop(audioCtx.currentTime+0.05); }
-                if(type === 'move') { o.frequency.setValueAtTime(400, audioCtx.currentTime); g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1); o.start(); o.stop(audioCtx.currentTime+0.1); }
-                if(type === 'coin') { o.frequency.setValueAtTime(880, audioCtx.currentTime); g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2); o.start(); o.stop(audioCtx.currentTime+0.2); }
-            } catch(e){}
-        }
+        let jogo = { jogadores: [], turno: 0, props: {} };
 
         function gerarConfig() {
-            const n = document.getElementById('qty').value;
+            let n = document.getElementById('qty').value;
             let html = "";
-            for(let i=0; i<n; i++) {
-                html += `<div class="player-config-card">
-                    <input type="text" id="name-${i}" value="Jogador ${i+1}">
-                    <select id="avatar-${i}">${AVATARES.map((a,idx) => `<option value="${a}" ${idx===i?'selected':''}>${a}</option>`).join('')}</select>
-                </div>`;
-            }
+            for(let i=0; i<n; i++) html += `<div class="player-config-card"><input type="text" id="n-${i}" value="Jogador ${i+1}"></div>`;
             document.getElementById('config-area').innerHTML = html;
         }
         gerarConfig();
 
         function iniciarJogo() {
-            const n = document.getElementById('qty').value;
-            for(let i=0; i<n; i++) {
-                jogo.jogadores.push({ id: i, nome: document.getElementById(`name-${i}`).value, avatar: document.getElementById(`avatar-${i}`).value, saldo: 1500, pos: 0, log: [], cor: CORES[i], divida: 0 });
-            }
+            let n = document.getElementById('qty').value;
+            for(let i=0; i<n; i++) jogo.jogadores.push({ id:i, nome:document.getElementById(`n-${i}`).value, avatar:AVATARES[i], saldo:1500, pos:0, cor:CORES[i] });
             document.getElementById('setup-screen').style.display = "none";
             document.getElementById('game-ui').style.display = "flex";
-            if (audioCtx.state === 'suspended') audioCtx.resume();
             desenharBoard(); render();
         }
 
@@ -167,106 +124,78 @@
                 if(i > 10 && i < 20) el.style.gridRow = 21 - i;
                 if(i > 20 && i < 30) el.style.gridColumn = i - 19;
                 if(i > 30) el.style.gridRow = i - 29;
-                let html = `<div id="build-${i}" style="position:absolute; top:10px;"></div>`;
-                if(casa.c) html += `<div class="bar" style="background:${casa.c}"></div>`;
-                html += `<span>${casa.n}</span><div class="pawn-grid" id="pg-${i}"></div>`;
-                el.innerHTML = html; container.appendChild(el);
+                el.innerHTML = `${casa.c ? `<div class="bar" style="background:${casa.c}"></div>`:''}<span>${casa.n}</span><div class="pawn-grid" id="pg-${i}"></div><div id="build-${i}" style="font-size:8px"></div>`;
+                container.appendChild(el);
             });
         }
 
-        async function rolarDados() {
-            const btn = document.getElementById('roll-btn'); btn.disabled = true;
-            for(let i=0; i<6; i++) { playSfx('dice'); await new Promise(r => setTimeout(r, 80)); }
-            const d1 = Math.floor(Math.random()*6)+1; const d2 = Math.floor(Math.random()*6)+1;
-            jogo.dadoAtual = d1 + d2;
-            document.getElementById('dice-view').innerText = "🎲 " + jogo.dadoAtual;
+        function rolarDados() {
+            let total = (Math.floor(Math.random()*6)+1) + (Math.floor(Math.random()*6)+1);
+            document.getElementById('dice-view').innerText = "🎲 " + total;
             let j = jogo.jogadores[jogo.turno];
-            addLog(j.id, `🎲 Tirou ${jogo.dadoAtual}`);
-            for(let s=0; s<jogo.dadoAtual; s++) {
-                j.pos = (j.pos + 1) % 40; playSfx('move');
-                if(j.pos === 0) { j.saldo += 200; playSfx('coin'); addLog(j.id, "💰 +$200"); }
-                render(true); await new Promise(r => setTimeout(r, 180));
-            }
+            j.pos = (j.pos + total) % 40;
             processarCasa(j);
         }
 
         function processarCasa(j) {
-            const casa = TABULEIRO[j.pos]; const prop = jogo.props[j.pos];
-            if(casa.n === "SORTE" || casa.n === "COFRE") {
-                const carta = CARTAS_SORTE[Math.floor(Math.random()*CARTAS_SORTE.length)];
-                document.getElementById('overlay-card').innerHTML = `<h3>${casa.n}</h3><p>${carta.t}</p>`;
-                document.getElementById('overlay-card').style.display = "block";
-                carta.f(j);
-            } else if(prop && prop.dono !== j.id) {
-                let aluguel = 0;
-                if(casa.tipo === "metro") {
-                    const mCount = Object.keys(jogo.props).filter(k => TABULEIRO[k].tipo === "metro" && jogo.props[k].dono === prop.dono).length;
-                    aluguel = [0, 25, 50, 100, 200][mCount];
-                } else if(casa.tipo === "util") {
-                    const uCount = Object.keys(jogo.props).filter(k => TABULEIRO[k].tipo === "util" && jogo.props[k].dono === prop.dono).length;
-                    aluguel = uCount === 1 ? jogo.dadoAtual * 4 : jogo.dadoAtual * 10;
-                } else { aluguel = casa.r[prop.nivel]; }
-                j.saldo -= aluguel; jogo.jogadores[prop.dono].saldo += aluguel;
-                addLog(j.id, `💸 Pagou aluguel: $${aluguel}`); playSfx('coin');
-            } else if(casa.n.includes("IMPOSTO") || casa.n.includes("TAXA")) { j.saldo -= casa.p; }
+            const casa = TABULEIRO[j.pos];
+            const prop = jogo.props[j.pos];
 
-            if(casa.p && !casa.n.includes("IMPOSTO") && !casa.n.includes("TAXA") && (!prop || (prop.dono === j.id && !casa.tipo))) {
-                if(!prop || prop.nivel < 5) {
-                    const b = document.getElementById('buy-btn'); b.style.display = "block";
-                    const custo = prop ? casa.b : casa.p;
-                    b.innerText = prop ? (prop.nivel < 4 ? `CASA ($${custo})` : `HOTEL ($${custo})`) : `COMPRAR ($${custo})`;
-                }
+            if(casa.n === "SORTE" || casa.n === "COFRE") {
+                const sorte = Math.random() > 0.5 ? 100 : -100;
+                j.saldo += sorte;
+                mostrarCarta(`${casa.n}`, `${sorte > 0 ? 'Recebeu' : 'Pagou'} $${Math.abs(sorte)} por sorte!`);
+            } else if(prop && prop.dono !== j.id) {
+                let aluguel = casa.r ? casa.r[prop.nivel] : 50;
+                j.saldo -= aluguel; jogo.jogadores[prop.dono].saldo += aluguel;
+            } else if(casa.p && !prop) {
+                const b = document.getElementById('buy-btn'); b.style.display = "block";
+                b.innerText = `COMPRAR ${casa.n} ($${casa.p})`;
             }
-            const btn = document.getElementById('roll-btn'); btn.disabled = false; btn.innerText = "PASSAR VEZ";
-            btn.onclick = passarVez; render();
+            
+            document.getElementById('roll-btn').innerText = "PASSAR VEZ";
+            document.getElementById('roll-btn').onclick = passarVez;
+            render();
+        }
+
+        function mostrarCarta(titulo, texto) {
+            const card = document.getElementById('overlay-card');
+            card.innerHTML = `<h2>${titulo}</h2><p>${texto}</p>`;
+            card.style.display = "block";
+        }
+
+        function fecharCarta() {
+            document.getElementById('overlay-card').style.display = "none";
+        }
+
+        function passarVez() {
+            fecharCarta();
+            jogo.turno = (jogo.turno + 1) % jogo.jogadores.length;
+            document.getElementById('roll-btn').innerText = "ROLAR DADOS";
+            document.getElementById('roll-btn').onclick = rolarDados;
+            document.getElementById('buy-btn').style.display = "none";
+            render();
         }
 
         function comprarProp() {
             let j = jogo.jogadores[jogo.turno]; let casa = TABULEIRO[j.pos];
-            if(!jogo.props[j.pos]) {
-                if(j.saldo >= casa.p) { j.saldo -= casa.p; jogo.props[j.pos] = { dono: j.id, nivel: 0 }; playSfx('coin'); addLog(j.id, `🏠 Comprou ${casa.n}`); }
-            } else {
-                if(j.saldo >= casa.b && jogo.props[j.pos].nivel < 5) {
-                    j.saldo -= casa.b; jogo.props[j.pos].nivel++; playSfx('coin'); addLog(j.id, `🔨 Construiu em ${casa.n}`);
-                }
-            }
+            if(j.saldo >= casa.p) { j.saldo -= casa.p; jogo.props[j.pos] = { dono: j.id, nivel: 0 }; }
             document.getElementById('buy-btn').style.display = "none"; render();
         }
 
-        function passarVez() {
-            jogo.turno = (jogo.turno + 1) % jogo.jogadores.length;
-            const btn = document.getElementById('roll-btn'); btn.innerText = "ROLAR DADOS"; btn.onclick = rolarDados;
-            document.getElementById('buy-btn').style.display = "none"; document.getElementById('overlay-card').style.display = "none";
-            render();
-        }
-
-        function moverPara(j, p) { j.pos = p; if(p === 0) j.saldo += 200; render(); }
-        function pagarReparos(j, vc, vh) { 
-            let t = 0; Object.values(jogo.props).forEach(p => { if(p.dono===j.id) t += p.nivel === 5 ? vh : p.nivel * vc; });
-            j.saldo -= t; addLog(j.id, `🔧 Reparos: -$${t}`);
-        }
-        function pedirLoan(idx) { jogo.jogadores[idx].saldo += 500; jogo.jogadores[idx].divida += 600; render(); }
-        function addLog(id, m) { jogo.jogadores[id].log.unshift(m); if(jogo.jogadores[id].log.length > 3) jogo.jogadores[id].log.pop(); }
-
-        function render(moving = false) {
+        function render() {
             document.querySelectorAll('.pawn-grid').forEach(g => g.innerHTML = "");
             jogo.jogadores.forEach((j, i) => {
-                const p = document.createElement('div'); p.className = `pawn ${moving && i === jogo.turno ? 'moving' : ''}`;
-                p.innerHTML = j.avatar; document.getElementById(`pg-${j.pos}`).appendChild(p);
+                const p = document.createElement('div'); p.className = "pawn"; p.innerHTML = j.avatar;
+                document.getElementById(`pg-${j.pos}`).appendChild(p);
             });
             Object.keys(jogo.props).forEach(idx => {
-                const pr = jogo.props[idx];
-                document.getElementById(`tile-${idx}`).style.boxShadow = `inset 0 0 0 3px ${jogo.jogadores[pr.dono].cor}`;
-                document.getElementById(`build-${idx}`).innerText = pr.nivel === 5 ? "🏨" : "🏠".repeat(pr.nivel);
+                document.getElementById(`tile-${idx}`).style.boxShadow = `inset 0 0 0 3px ${jogo.jogadores[jogo.props[idx].dono].cor}`;
             });
             document.getElementById('sidebar').innerHTML = jogo.jogadores.map((j, i) => `
                 <div class="p-card ${jogo.turno === i ? 'active' : ''}">
-                    <b>${j.avatar} ${j.nome}</b> | $${j.saldo}
-                    <div class="p-history">${j.log.map(l => `<div>• ${l}</div>`).join('')}</div>
-                    <button class="btn btn-loan" onclick="pedirLoan(${i})">EMPRÉSTIMO $500</button>
-                </div>
-            `).join('');
-            document.getElementById('turn-msg').innerText = "Vez de: " + jogo.jogadores[jogo.turno].nome;
+                    <b>${j.avatar} ${j.nome}</b><br>$${j.saldo}
+                </div>`).join('');
         }
     </script>
 </body>
