@@ -51,15 +51,13 @@
         .btn-roll { background: linear-gradient(to bottom, #fbbf24, #d97706); color: #000; font-size: 18px; }
         .btn-util { background: #475569; font-size: 10px; }
 
-        /* Dice */
+        /* Dice Display */
         .dice-container { display: flex; gap: 10px; margin-bottom: 10px; }
         .die { width: 40px; height: 40px; background: white; color: black; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 0 #cbd5e1; }
 
         /* Modal */
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; z-index: 1000; backdrop-filter: blur(5px); }
         .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 380px; background: #f8fafc; color: #0f172a; border-radius: 28px; padding: 25px; display: none; z-index: 1001; text-align: center; }
-        .card-luck { border-top: 15px solid #f97316; }
-        .card-chest { border-top: 15px solid #3b82f6; }
     </style>
 </head>
 <body>
@@ -67,8 +65,8 @@
 <div id="setup-screen">
     <div class="setup-card">
         <h1 style="text-align:center; color:var(--gold); margin:0 0 20px 0; font-size: 24px;">MONOPOLY BRASIL</h1>
-        <label>Quantidade de Jogadores (2-8):</label>
-        <input type="number" id="p-count" min="2" max="8" value="2" onchange="initSetup()" style="width:100%; padding:10px; border-radius:8px; margin: 10px 0;">
+        <label>Jogadores (2-8):</label>
+        <input type="number" id="p-count" min="2" max="8" value="2" onchange="initSetup()" style="width:100%; padding:10px; border-radius:8px; margin: 10px 0; background: #334155; color:white; border:none;">
         <div id="setup-list" class="setup-list"></div>
         <button class="btn btn-roll" style="width:100%" onclick="startGame()">INICIAR PARTIDA</button>
     </div>
@@ -91,7 +89,7 @@
 </div>
 
 <div class="controls">
-    <button class="btn btn-util" onclick="showAssets()">MEUS BENS</button>
+    <button class="btn btn-util" onclick="showAssets()">BENS / HIPOTECA</button>
     <button class="btn btn-roll" id="roll-btn" onclick="handleRoll()">JOGAR DADOS</button>
     <button class="btn btn-util" onclick="showHistory()">HISTÓRICO</button>
 </div>
@@ -104,7 +102,7 @@
 </div>
 
 <script>
-    // --- DATABASE DO JOGO (Fiel ao Monopoly Brasil) ---
+    // --- DATABASE DAS CASAS (Fiel à imagem 2 e Monopoly Brasil) ---
     const TILES = [
         {n: "PARTIDA", type: "go"},
         {n: "AV. SUMARÉ", type: "prop", g: "brown", p: 60, r: [2, 10, 30, 90, 160, 250], h: 50},
@@ -137,7 +135,7 @@
         {n: "CIA ÁGUA", type: "util", p: 150, icon: "🚰"},
         {n: "IBIRAPUERA", type: "prop", g: "yellow", p: 280, r: [24, 120, 360, 850, 1025, 1200], h: 150},
         {n: "VÁ PARA A PRISÃO", type: "gojail"},
-        {n: "BARRA DA TIJUCA", type: "prop", g: "green", p: 300, r: [26, 130, 390, 900, 1100, 1275], h: 200},
+        {n: "BARRA DA TIJUCA", type: "green", p: 300, r: [26, 130, 390, 900, 1100, 1275], h: 200, type: "prop", g: "green"},
         {n: "JARDIM BOTÂNICO", type: "prop", g: "green", p: 300, r: [26, 130, 390, 900, 1100, 1275], h: 200},
         {n: "COFRE", type: "chest"},
         {n: "IPANEMA", type: "prop", g: "green", p: 320, r: [28, 150, 450, 1000, 1200, 1400], h: 200},
@@ -149,8 +147,6 @@
     ];
 
     const COLORS = { brown: "#78350f", lblue: "#7dd3fc", pink: "#db2777", orange: "#f97316", red: "#ef4444", yellow: "#facc15", green: "#15803d", blue: "#1e40af" };
-    
-    // Globais
     let players = [], turn = 0, doublesCount = 0, housesThisTurn = 0;
     const audio = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -166,7 +162,7 @@
         const list = document.getElementById('setup-list');
         const icons = ["🎩","🚗","🐕","🚀","🏎️","🚢","👟","🐱"];
         list.innerHTML = "";
-        for(let i=0; i<n; i++) {
+        for(let i=0; i<Math.min(n, 8); i++) {
             list.innerHTML += `
                 <div class="player-input">
                     <span style="font-size:20px">${icons[i]}</span>
@@ -181,7 +177,7 @@
         for(let i=0; i<n; i++) {
             players.push({
                 id: i, name: document.getElementById(`p-name-${i}`).value,
-                icon: icons[i], money: 1500, pos: 0, jail: 0, props: [], history: ["Partida iniciada com M$ 1500"]
+                icon: icons[i], money: 1500, pos: 0, jail: 0, props: [], history: ["Partida iniciada"]
             });
         }
         document.getElementById('setup-screen').style.display = 'none';
@@ -194,8 +190,6 @@
         TILES.forEach((t, i) => {
             const d = document.createElement('div');
             d.className = 'tile'; d.id = `tile-${i}`;
-            
-            // Grid Position Logic
             if(i <= 10) { d.style.gridRow = 11; d.style.gridColumn = 11 - i; }
             else if(i <= 20) { d.style.gridColumn = 1; d.style.gridRow = 21 - i; }
             else if(i <= 30) { d.style.gridRow = 1; d.style.gridColumn = i - 19; }
@@ -205,7 +199,6 @@
             if(t.g) html += `<div class="t-color" style="background:${COLORS[t.g]}"></div>`;
             html += `<div class="t-info">${t.n}${t.icon?`<div style="font-size:12px">${t.icon}</div>`:''}</div>`;
             if(t.p) html += `<div class="t-price">M$ ${t.p}</div>`;
-            
             d.innerHTML = html;
             b.appendChild(d);
         });
@@ -231,9 +224,11 @@
 
         if(d1 === d2) doublesCount++; else doublesCount = 0;
 
+        // Regra Prisão
         if(p.jail > 0) {
-            if(d1 === d2) { p.jail = 0; log(p, "Tirou duplos e saiu da Prisão!"); }
-            else { 
+            if(d1 === d2) { 
+                p.jail = 0; log(p, "Tirou duplos e saiu da Prisão!"); 
+            } else { 
                 p.jail--; 
                 if(p.jail === 0) { p.money -= 50; log(p, "Pagou M$ 50 de fiança."); }
                 else { log(p, `Ainda preso (${p.jail} turnos)`); return setTimeout(nextTurn, 1000); }
@@ -249,9 +244,9 @@
         let steps = d1 + d2;
         for(let i=0; i<steps; i++) {
             p.pos = (p.pos + 1) % 40;
-            if(p.pos === 0) { p.money += 200; sfx(600); log(p, "Recebeu M$ 200 ao passar pela Partida."); }
+            if(p.pos === 0) { p.money += 200; sfx(600); log(p, "Recebeu M$ 200 (Passou pela Partida)"); }
             updatePawns();
-            await new Promise(r => setTimeout(r, 200));
+            await new Promise(r => setTimeout(r, 150));
         }
         processTile(steps);
     }
@@ -262,22 +257,22 @@
 
         if(t.type === "gojail") {
             p.pos = 10; p.jail = 3;
-            showModal("PRISÃO", "Vá direto para o xadrez!", [{t: "OK", c: "#000", f: nextTurn}]);
+            showModal("POLÍCIA", "Vá direto para a Prisão!", [{t: "OK", c: "#000", f: nextTurn}]);
         } else if(t.p > 0) {
             if(!t.owner) {
-                showModal(t.n, `Deseja comprar esta propriedade por M$ ${t.p}?`, [
+                showModal(t.n, `Deseja comprar por M$ ${t.p}?`, [
                     {t: "COMPRAR", c: "#16a34a", f: () => buyProp(p, t)},
                     {t: "LEILOAR", c: "#64748b", f: nextTurn}
                 ]);
             } else if(t.owner !== p && !t.mortgaged) {
                 let rent = calculateRent(t, dice);
                 p.money -= rent; t.owner.money += rent;
-                log(p, `Pagou M$ ${rent} de aluguel em ${t.n}`);
+                log(p, `Pagou M$ ${rent} para ${t.owner.name}`);
                 showModal("ALUGUEL", `Você pagou M$ ${rent} para ${t.owner.name}`, [{t: "PAGAR", c: "#dc2626", f: (doublesCount > 0 ? closeModal : nextTurn)}]);
             } else nextTurn();
         } else if(t.type === "tax") {
             p.money -= t.val;
-            showModal(t.n, `Pagamento obrigatório de M$ ${t.val}`, [{t: "PAGAR", c: "#000", f: nextTurn}]);
+            showModal(t.n, `Taxa obrigatória: M$ ${t.val}`, [{t: "PAGAR", c: "#000", f: nextTurn}]);
         } else if(t.type === "luck" || t.type === "chest") {
             handleCard(t.type);
         } else nextTurn();
@@ -293,78 +288,76 @@
             const count = t.owner.props.filter(idx => TILES[idx].type === "util").length;
             return dice * (count === 2 ? 10 : 4);
         }
-        return t.houses ? t.r[t.houses] : t.r[0];
+        return (t.houses > 0) ? t.r[t.houses] : t.r[0];
     }
 
     function buyProp(p, t) {
         if(p.money >= t.p) {
             p.money -= t.p; t.owner = p; p.props.push(p.pos);
-            sfx(800, "sine", 0.3);
-            log(p, `Comprou ${t.n} por M$ ${t.p}`);
+            log(p, `Comprou ${t.n}`);
             if(doublesCount > 0) closeModal(); else nextTurn();
-        } else alert("Saldo insuficiente!");
+        } else alert("Dinheiro insuficiente!");
     }
 
     function handleCard(type) {
         const p = players[turn];
-        const isLuck = type === "luck";
-        const cards = isLuck ? [
+        const luckCards = [
             {m: "Avance até a Partida", f: () => { p.pos = 0; p.money += 200; }},
-            {m: "Multa por excesso de velocidade: M$ 50", f: () => p.money -= 50},
-            {m: "Sua apólice de seguro venceu: Receba M$ 100", f: () => p.money += 100}
-        ] : [
-            {m: "Erro do banco a seu favor: Receba M$ 200", f: () => p.money += 200},
-            {m: "Despesas hospitalares: Pague M$ 100", f: () => p.money -= 100},
-            {m: "Venda de ações: Receba M$ 50", f: () => p.money += 50}
+            {m: "Multa por excesso de velocidade: Pague M$ 50", f: () => p.money -= 50},
+            {m: "Sua apólice venceu: Receba M$ 100", f: () => p.money += 100},
+            {m: "Vá para a Prisão sem passar pela partida", f: () => { p.pos = 10; p.jail = 3; }}
         ];
-        const card = cards[Math.floor(Math.random()*cards.length)];
+        const card = luckCards[Math.floor(Math.random()*luckCards.length)];
         card.f();
-        showModal(isLuck?"SORTE":"COFRE", card.m, [{t: "OK", c: isLuck?"#f97316":"#3b82f6", f: nextTurn}]);
-    }
-
-    function showAssets() {
-        const p = players[turn];
-        let h = `<div style="text-align:left">Saldo: <b>M$ ${p.money}</b><hr>`;
-        p.props.forEach(idx => {
-            const t = TILES[idx];
-            h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:5px; background:#e2e8f0; border-radius:8px">
-                    <div style="font-size:12px"><b>${t.n}</b><br>Aluguel Atual: M$ ${calculateRent(t, 7)}</div>
-                    <div>
-                        ${(t.g && !t.mortgaged)?`<button onclick="buildHouse(${idx})" style="padding:4px">🏠</button>`:''}
-                        <button onclick="toggleMortgage(${idx})" style="padding:4px">${t.mortgaged?'🏦🔓':'🏦🔒'}</button>
-                    </div>
-                  </div>`;
-        });
-        showModal("PATRIMÔNIO", h || "Nenhuma propriedade comprada.", [{t: "FECHAR", c: "#000", f: closeModal}]);
+        showModal(type === "luck" ? "SORTE" : "COFRE", card.m, [{t: "OK", c: "#3b82f6", f: nextTurn}]);
     }
 
     function buildHouse(idx) {
         const p = players[turn]; const t = TILES[idx];
-        if(housesThisTurn >= 4) return alert("Limite de 4 casas por rodada atingido!");
+        if(housesThisTurn >= 4) return alert("Limite de 4 casas por turno!");
         if(!t.houses) t.houses = 0;
-        if(t.houses === 4 && housesThisTurn > 0) return alert("Hotéis só podem ser construídos no próximo turno.");
+        if(t.houses === 4 && housesThisTurn > 0) return alert("Hotel só pode ser comprado se você não construiu casas neste turno.");
         if(t.houses < 5 && p.money >= t.h) {
             p.money -= t.h; t.houses++; housesThisTurn++;
             updateVisualBuilds(); updateUI(); showAssets();
+            log(p, `Construiu em ${t.n}`);
         }
     }
 
     function toggleMortgage(idx) {
         const p = players[turn]; const t = TILES[idx];
         if(!t.mortgaged) {
+            if(t.houses > 0) return alert("Venda as casas antes de hipotecar!");
             t.mortgaged = true; p.money += (t.p / 2);
+            log(p, `Hipotecou ${t.n}`);
         } else {
             let cost = Math.floor((t.p / 2) * 1.1);
-            if(p.money >= cost) { p.money -= cost; t.mortgaged = false; }
+            if(p.money >= cost) { p.money -= cost; t.mortgaged = false; log(p, `Quitou hipoteca de ${t.n}`); }
         }
         updateUI(); showAssets();
+    }
+
+    function showAssets() {
+        const p = players[turn];
+        let h = `<div style="text-align:left; color:#1e293b">Saldo: <b>M$ ${p.money}</b><hr>`;
+        p.props.forEach(idx => {
+            const t = TILES[idx];
+            h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:10px; background:#f1f5f9; border-radius:12px">
+                    <div style="font-size:12px"><b>${t.n}</b><br>Aluguel: M$ ${calculateRent(t, 7)}<br>Casas: ${t.houses === 5 ? 'HOTEL' : t.houses || 0}</div>
+                    <div style="display:flex; gap:5px">
+                        ${(t.g && !t.mortgaged && t.houses < 5)?`<button onclick="buildHouse(${idx})" style="padding:8px; border-radius:8px; border:1px solid #ccc">🏠+</button>`:''}
+                        <button onclick="toggleMortgage(${idx})" style="padding:8px; border-radius:8px; border:1px solid #ccc">${t.mortgaged?'🔓':'🏦'}</button>
+                    </div>
+                  </div>`;
+        });
+        showModal("MEUS BENS", h || "Nenhuma propriedade.", [{t: "FECHAR", c: "#000", f: closeModal}]);
     }
 
     function nextTurn() {
         closeModal();
         if(doublesCount === 0) turn = (turn + 1) % players.length;
         document.getElementById('roll-btn').disabled = false;
-        document.getElementById('game-status').innerText = `VEZ DE: ${players[turn].name.toUpperCase()} ${doublesCount>0?'(DREN!)':''}`;
+        document.getElementById('game-status').innerText = `VEZ DE: ${players[turn].name.toUpperCase()} ${doublesCount>0?'(DUPLOS!)':''}`;
         updateUI();
     }
 
@@ -383,8 +376,8 @@
             const tile = document.getElementById(`tile-${p.pos}`);
             const pawn = document.getElementById(`pawn-${p.id}`);
             const rect = tile.getBoundingClientRect();
-            pawn.style.top = (rect.top + 5 + (p.id * 3)) + "px";
-            pawn.style.left = (rect.left + 5 + (p.id * 3)) + "px";
+            pawn.style.top = (rect.top + 5 + (p.id * 2)) + "px";
+            pawn.style.left = (rect.left + 5 + (p.id * 2)) + "px";
         });
     }
 
@@ -401,7 +394,7 @@
 
     function showHistory() {
         const h = players[turn].history.slice(-10).reverse().join("<br>• ");
-        showModal("LOG INDIVIDUAL", "• " + h, [{t: "VOLTAR", c: "#000", f: closeModal}]);
+        showModal("HISTÓRICO", "• " + h, [{t: "FECHAR", c: "#000", f: closeModal}]);
     }
 
     function showModal(t, b, btns) {
