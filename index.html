@@ -3,285 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monopoly Brasil - Ultimate Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;800&display=swap" rel="stylesheet">
+    <title>Monopoly Premium Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0f172a; --board: #e2e8f0; --gold: #fbbf24;
-            --player-1: #ef4444; --player-2: #3b82f6; --player-3: #10b981; --player-4: #f59e0b;
+            --bg: #1a1a1a; --board-bg: #e8f5e9; --accent: #2ecc71;
+            --p1: #e74c3c; --p2: #3498db;
         }
-        * { box-sizing: border-box; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--bg); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* --- DASHBOARD --- */
-        #stat-bar { 
-            display: flex; gap: 12px; padding: 15px; overflow-x: auto; 
-            background: rgba(0,0,0,0.3); backdrop-filter: blur(10px);
-        }
-        .p-card { 
-            min-width: 140px; padding: 12px; border-radius: 18px; 
-            background: rgba(255,255,255,0.05); border: 2px solid transparent; transition: 0.4s;
-        }
-        .p-card.active { border-color: var(--gold); background: rgba(251, 191, 36, 0.1); transform: scale(1.05); }
-        .p-money { color: #4ade80; font-weight: 800; font-size: 1.1em; }
+        #game-header { display: flex; justify-content: space-around; padding: 15px; background: rgba(0,0,0,0.5); border-bottom: 2px solid #333; z-index: 10; }
+        .player-box { padding: 10px; border-radius: 12px; transition: 0.3s; border: 2px solid transparent; text-align: center; min-width: 120px; }
+        .player-box.active { border-color: var(--accent); background: rgba(46, 204, 113, 0.1); transform: translateY(-5px); }
+        .money { font-weight: 900; color: #2ecc71; font-size: 1.1em; display: block; }
 
-        /* --- TABULEIRO PRO --- */
-        .world { flex: 1; display: flex; align-items: center; justify-content: center; padding: 10px; }
-        #board-container { 
-            position: relative; width: 95vw; height: 95vw; max-width: 520px; max-height: 520px;
-            background: #1e293b; padding: 4px; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        #grid { display: grid; width: 100%; height: 100%; grid-template-columns: 1.4fr repeat(9, 1fr) 1.4fr; grid-template-rows: 1.4fr repeat(9, 1fr) 1.4fr; gap: 2px; }
-
-        .square { background: white; position: relative; color: #1e293b; display: flex; flex-direction: column; transition: 0.2s; }
-        .s-head { height: 22%; width: 100%; border-bottom: 1px solid rgba(0,0,0,0.1); }
-        .s-label { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 7px; font-weight: 800; text-transform: uppercase; padding: 2px; }
-
-        /* --- PEÕES --- */
-        .token { 
-            position: absolute; width: 22px; height: 22px; z-index: 50; 
-            transition: all 0.5s cubic-bezier(0.5, 1.2, 0.5, 1.2);
-            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.4)); font-size: 18px;
-            display: flex; align-items: center; justify-content: center; pointer-events: none;
+        .board-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 10px; overflow: hidden; }
+        #board { 
+            display: grid; width: 95vw; height: 95vw; max-width: 500px; max-height: 500px;
+            grid-template-columns: 1.5fr repeat(4, 1fr) 1.5fr;
+            grid-template-rows: 1.5fr repeat(4, 1fr) 1.5fr;
+            background: #222; gap: 2px; padding: 5px; border-radius: 10px; position: relative;
         }
 
-        /* --- CONTROLES --- */
-        .actions { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 12px; padding: 20px; background: #1e293b; }
-        .btn { border: none; border-radius: 15px; font-weight: 800; cursor: pointer; color: white; transition: 0.2s; text-transform: uppercase; }
-        .btn-play { background: linear-gradient(to bottom, #fbbf24, #d97706); color: #000; font-size: 1.2em; box-shadow: 0 4px 0 #92400e; }
-        .btn-play:active { transform: translateY(4px); box-shadow: none; }
-        .btn-play:disabled { opacity: 0.3; filter: grayscale(1); }
-        .btn-sec { background: #475569; font-size: 0.7em; }
+        .tile { background: var(--board-bg); color: #2c3e50; position: relative; font-size: 8px; font-weight: bold; display: flex; flex-direction: column; }
+        .tile-color { height: 15px; width: 100%; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .tile-name { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2px; text-transform: uppercase; font-size: 7px; }
 
-        /* --- MODAL --- */
-        #modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 1000; backdrop-filter: blur(4px); }
-        .modal { 
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 85%; max-width: 380px; background: white; border-radius: 25px; 
-            padding: 25px; display: none; z-index: 1001; color: #0f172a; text-align: center;
+        .pawn { 
+            position: absolute; width: 20px; height: 20px; border-radius: 50%; z-index: 100;
+            transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
+            border: 2px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; font-size: 12px;
+            pointer-events: none;
         }
+
+        .controls { padding: 15px; background: #111; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .dice-area { display: flex; gap: 10px; }
+        .die { width: 45px; height: 45px; background: white; color: black; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; }
         
-        /* --- CONSTRUÇÕES --- */
-        .house-row { position: absolute; top: 2px; width: 100%; display: flex; justify-content: center; gap: 1px; }
-        .h-unit { width: 5px; height: 5px; background: #16a34a; border-radius: 1px; }
-        .hotel-unit { width: 12px; height: 6px; background: #dc2626; border-radius: 1px; }
+        .btn-roll { 
+            background: var(--accent); color: white; border: none; padding: 12px 40px; 
+            border-radius: 25px; font-weight: 900; cursor: pointer; transition: 0.2s;
+        }
+        .btn-roll:disabled { background: #444; cursor: not-allowed; opacity: 0.7; }
+
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+        .modal { background: white; color: #333; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px; text-align: center; animation: pop 0.3s ease-out; }
+        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-choice { flex: 1; padding: 12px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="stat-bar"></div>
+<div id="game-header">
+    <div id="p0-card" class="player-box active">
+        <div>P1 🎩</div>
+        <span class="money" id="p0-money">M$ 1500</span>
+    </div>
+    <div id="p1-card" class="player-box">
+        <div>P2 🚗</div>
+        <span class="money" id="p1-money">M$ 1500</span>
+    </div>
+</div>
 
-<div class="world">
-    <div id="board-container">
-        <div id="grid">
-            <div style="grid-area: 2/2/11/11; background: #cbd5e1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
-                <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <div id="dice1" style="font-size:40px; background:white; padding:10px; border-radius:10px; color:black; box-shadow: 0 4px 0 #94a3b8;">?</div>
-                    <div id="dice2" style="font-size:40px; background:white; padding:10px; border-radius:10px; color:black; box-shadow: 0 4px 0 #94a3b8;">?</div>
-                </div>
-                <div id="msg" style="color:#334155; font-weight:800; text-transform:uppercase; font-size:12px">Aguardando...</div>
-            </div>
+<div class="board-container">
+    <div id="board">
+        <div id="center-logo" style="grid-area: 2/2/6/6; background: #dfe6e9; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px;">
+            <div id="status-msg" style="color: #636e72; font-weight: 900; text-transform: uppercase; text-align:center; font-size: 10px;">Aguardando...</div>
         </div>
     </div>
 </div>
 
-<div class="actions">
-    <button class="btn btn-sec" onclick="openPortfolio()">Meus Bens</button>
-    <button class="btn btn-play" id="btn-roll" onclick="handleTurn()">Jogar</button>
-    <button class="btn btn-sec" onclick="alert('Regras: Monopólios dobram o aluguel base!')">Ajuda</button>
+<div class="controls">
+    <div class="dice-area">
+        <div id="d1" class="die">?</div>
+        <div id="d2" class="die">?</div>
+    </div>
+    <button class="btn-roll" id="roll-btn" onclick="takeTurn()">JOGAR DADOS</button>
 </div>
 
-<div id="modal-bg"></div>
-<div class="modal" id="modal-box">
-    <h2 id="m-title" style="margin-top:0"></h2>
-    <div id="m-body" style="margin-bottom:20px; color:#64748b;"></div>
-    <div id="m-footer"></div>
+<div id="overlay">
+    <div class="modal" id="modal-box">
+        <div id="modal-content"></div>
+    </div>
 </div>
 
 <script>
+    // Tabuleiro Reduzido para Performance e Telas Pequenas
     const TILES = [
-        {n: "PARTIDA", type: "go"},
-        {n: "AV. SUMARÉ", g: "brown", p: 60, r: [2, 10, 30, 90, 160, 250], h: 50},
-        {n: "COFRE", type: "chest"},
-        {n: "AV. SÃO JOÃO", g: "brown", p: 60, r: [4, 20, 60, 180, 320, 450], h: 50},
-        {n: "IMPOSTO", type: "tax", v: 200},
-        {n: "EST. MARACANÃ", type: "station", p: 200},
-        {n: "RUA 25 MARÇO", g: "lblue", p: 100, r: [6, 30, 90, 270, 400, 550], h: 50},
-        {n: "SORTE", type: "luck"},
-        {n: "AV. PAULISTA", g: "lblue", p: 100, r: [6, 30, 90, 270, 400, 550], h: 50},
-        {n: "AV. VIEIRA SOUTO", g: "lblue", p: 120, r: [8, 40, 100, 300, 450, 600], h: 50},
-        {n: "PRISÃO", type: "jail"},
-        {n: "AV. ATLÂNTICA", g: "pink", p: 140, r: [10, 50, 150, 450, 625, 750], h: 100},
-        {n: "CIA ELÉTRICA", type: "util", p: 150},
-        {n: "AV. NITERÓI", g: "pink", p: 140, r: [10, 50, 150, 450, 625, 750], h: 100},
-        {n: "AV. FARIA LIMA", g: "pink", p: 160, r: [12, 60, 180, 500, 700, 900], h: 100},
-        {n: "EST. CARIOCA", type: "station", p: 200},
-        {n: "AV. BERRINI", g: "orange", p: 180, r: [14, 70, 200, 550, 750, 950], h: 100},
-        {n: "COFRE", type: "chest"},
-        {n: "AV. PRES. JK", g: "orange", p: 180, r: [14, 70, 200, 550, 750, 950], h: 100},
-        {n: "AV. 9 JULHO", g: "orange", p: 200, r: [16, 80, 220, 600, 800, 1000], h: 100},
-        {n: "CENTRO", type: "free"},
-        {n: "AV. EUROPA", g: "red", p: 220, r: [18, 90, 250, 700, 875, 1050], h: 150},
-        {n: "SORTE", type: "luck"},
-        {n: "AV. AUGUSTA", g: "red", p: 220, r: [18, 90, 250, 700, 875, 1050], h: 150},
-        {n: "AV. PACAEMBU", g: "red", p: 240, r: [20, 100, 300, 750, 925, 1100], h: 150},
-        {n: "EST. CONSOLAÇÃO", type: "station", p: 200},
-        {n: "INTERLAGOS", g: "yellow", p: 260, r: [22, 110, 330, 800, 975, 1150], h: 150},
-        {n: "MORUMBI", g: "yellow", p: 260, r: [22, 110, 330, 800, 975, 1150], h: 150},
-        {n: "CIA ÁGUA", type: "util", p: 150},
-        {n: "IBIRAPUERA", g: "yellow", p: 280, r: [24, 120, 360, 850, 1025, 1200], h: 150},
-        {n: "VÁ P/ PRISÃO", type: "gojail"},
-        {n: "BARRA", g: "green", p: 300, r: [26, 130, 390, 900, 1100, 1275], h: 200},
-        {n: "BOTÂNICO", g: "green", p: 300, r: [26, 130, 390, 900, 1100, 1275], h: 200},
-        {n: "COFRE", type: "chest"},
-        {n: "IPANEMA", g: "green", p: 320, r: [28, 150, 450, 1000, 1200, 1400], h: 200},
-        {n: "EST. REPÚBLICA", type: "station", p: 200},
-        {n: "SORTE", type: "luck"},
-        {n: "LEBLON", g: "blue", p: 350, r: [35, 175, 500, 1100, 1300, 1500], h: 200},
-        {n: "TAXA", type: "tax", v: 100},
-        {n: "AV. OCEÂNICA", g: "blue", p: 400, r: [50, 200, 600, 1400, 1700, 2000], h: 200}
+        { name: "Início", type: "go" },
+        { name: "Paulista", group: "blue", price: 100, rent: 50 },
+        { name: "Luz", type: "station", price: 200, rent: 100 },
+        { name: "Augusta", group: "pink", price: 150, rent: 75 },
+        { name: "Sorte", type: "luck" },
+        { name: "Cadeia", type: "jail" },
+        { name: "Ipanema", group: "orange", price: 200, rent: 100 },
+        { name: "Central", type: "station", price: 200, rent: 100 },
+        { name: "Leblon", group: "red", price: 250, rent: 150 },
+        { name: "Taxa", type: "tax", price: 150 },
+        { name: "Jardins", group: "red", price: 300, rent: 200 },
+        { name: "Vá p/ Cadeia", type: "go-jail" }
     ];
 
-    const GROUP_COLORS = { brown: "#78350f", lblue: "#0ea5e9", pink: "#db2777", orange: "#ea580c", red: "#dc2626", yellow: "#eab308", green: "#16a34a", blue: "#1d4ed8" };
-    let players = [], turn = 0;
+    const COLORS = { blue: "#3498db", pink: "#e84393", orange: "#e67e22", red: "#d63031" };
+    let players = [
+        { id: 0, pos: 0, money: 1500, color: "#e74c3c", icon: "🎩" },
+        { id: 1, pos: 0, money: 1500, color: "#3498db", icon: "🚗" }
+    ];
+    let turn = 0;
+    let isMoving = false;
 
-    function boot() {
-        const icons = ["🎩", "🚗", "🐶", "🚀"];
-        for(let i=0; i<2; i++) {
-            players.push({ id: i, name: `Jogador ${i+1}`, icon: icons[i], money: 1500, pos: 0, props: [], jail: 0 });
-        }
-        buildGrid();
-        updateUI();
-        document.getElementById('msg').innerText = `Vez de: ${players[0].name}`;
-    }
+    // Gerar Tabuleiro
+    const board = document.getElementById('board');
+    TILES.forEach((t, i) => {
+        const div = document.createElement('div');
+        div.className = 'tile';
+        div.id = `tile-${i}`;
+        
+        // Layout 4x4 Perimetral
+        if(i < 4) div.style.gridArea = `6 / ${4-i+1}`; 
+        else if(i < 6) div.style.gridArea = `${6-(i-3)} / 1`;
+        else if(i < 10) div.style.gridArea = `1 / ${i-5}`;
+        else div.style.gridArea = `${i-9+1} / 6`;
 
-    function buildGrid() {
-        const grid = document.getElementById('grid');
-        TILES.forEach((t, i) => {
-            const sq = document.createElement('div');
-            sq.className = 'square'; sq.id = `sq-${i}`;
-            if(i <= 10) sq.style.gridArea = `11 / ${11-i}`;
-            else if(i <= 20) sq.style.gridArea = `${21-i} / 1`;
-            else if(i <= 30) sq.style.gridArea = `1 / ${i-19}`;
-            else sq.style.gridArea = `${i-29} / 11`;
+        if(t.group) div.innerHTML = `<div class="tile-color" style="background:${COLORS[t.group]}"></div>`;
+        div.innerHTML += `<div class="tile-name">${t.name}</div>`;
+        board.appendChild(div);
+    });
 
-            let html = `<div class="house-row" id="houses-${i}"></div>`;
-            if(t.g) html += `<div class="s-head" style="background:${GROUP_COLORS[t.g]}"></div>`;
-            html += `<div class="s-label">${t.n}</div>`;
-            if(t.p) html += `<div style="font-size:6px; text-align:center; padding-bottom:2px">M$ ${t.p}</div>`;
-            
-            sq.innerHTML = html;
-            grid.appendChild(sq);
-        });
+    // Peões
+    players.forEach(p => {
+        const pawn = document.createElement('div');
+        pawn.className = 'pawn';
+        pawn.id = `pawn-${p.id}`;
+        pawn.style.backgroundColor = p.color;
+        pawn.innerText = p.icon;
+        document.body.appendChild(pawn);
+    });
 
+    function updatePositions() {
         players.forEach(p => {
-            const t = document.createElement('div');
-            t.className = 'token'; t.id = `token-${p.id}`; t.innerText = p.icon;
-            document.body.appendChild(t);
+            const tile = document.getElementById(`tile-${p.pos}`);
+            const rect = tile.getBoundingClientRect();
+            const pawn = document.getElementById(`pawn-${p.id}`);
+            pawn.style.top = `${window.scrollY + rect.top + (p.id * 4) + 5}px`;
+            pawn.style.left = `${window.scrollX + rect.left + (p.id * 4) + 5}px`;
         });
-        moveTokens();
+        document.getElementById('p0-money').innerText = `M$ ${players[0].money}`;
+        document.getElementById('p1-money').innerText = `M$ ${players[1].money}`;
     }
 
-    async function handleTurn() {
+    async function takeTurn() {
+        if(isMoving) return;
+        isMoving = true;
         const p = players[turn];
-        const btn = document.getElementById('btn-roll');
+        const btn = document.getElementById('roll-btn');
         btn.disabled = true;
 
-        const d1 = Math.floor(Math.random()*6)+1, d2 = Math.floor(Math.random()*6)+1;
-        document.getElementById('dice1').innerText = ['','⚀','⚁','⚂','⚃','⚄','⚅'][d1];
-        document.getElementById('dice2').innerText = ['','⚀','⚁','⚂','⚃','⚄','⚅'][d2];
+        let d1 = Math.floor(Math.random()*6)+1;
+        let d2 = Math.floor(Math.random()*6)+1;
+        document.getElementById('d1').innerText = d1;
+        document.getElementById('d2').innerText = d2;
 
-        let steps = d1 + d2;
-        for(let i=0; i<steps; i++) {
-            p.pos = (p.pos + 1) % 40;
-            if(p.pos === 0) { p.money += 200; updateUI(); }
-            moveTokens();
-            await new Promise(r => setTimeout(r, 200));
+        const move = d1 + d2;
+        for(let i=0; i<move; i++) {
+            p.pos = (p.pos + 1) % TILES.length;
+            if(p.pos === 0) p.money += 200;
+            updatePositions();
+            await new Promise(r => setTimeout(r, 250));
         }
 
-        evaluateTile(p);
+        handleTile(p);
     }
 
-    function evaluateTile(p) {
-        const t = TILES[p.pos];
-        if(t.p) { // Propriedade
-            if(!t.owner) {
-                showModal(t.n, `Comprar por M$ ${t.p}?`, [
-                    {label: "Comprar", cb: () => { buy(p, t); closeModal(); next(); }},
-                    {label: "Passar", cb: () => { closeModal(); next(); }}
-                ]);
-            } else if(t.owner !== p) {
-                const rent = getRent(t);
-                p.money -= rent; t.owner.money += rent;
-                showModal("Aluguel", `Você pagou M$ ${rent} para ${t.owner.name}`, [{label: "Pagar", cb: () => { closeModal(); next(); }}]);
-            } else next();
-        } else if(t.type === "tax") {
-            p.money -= t.v;
-            showModal("Imposto", `Pague M$ ${t.v}`, [{label: "OK", cb: () => { closeModal(); next(); }}]);
-        } else next();
-        updateUI();
+    function handleTile(p) {
+        const tile = TILES[p.pos];
+        const overlay = document.getElementById('overlay');
+        const content = document.getElementById('modal-content');
+
+        if(tile.price && !tile.owner) {
+            content.innerHTML = `
+                <h2 style="margin:0">${tile.name}</h2>
+                <p>Comprar por M$ ${tile.price}?</p>
+                <div class="modal-btns">
+                    <button class="btn-choice" style="background:var(--accent); color:white" onclick="buyTile(${p.id})">SIM</button>
+                    <button class="btn-choice" style="background:#eee" onclick="closeModal()">NÃO</button>
+                </div>`;
+            overlay.style.display = 'flex';
+        } else if(tile.owner !== undefined && tile.owner !== p.id) {
+            const rent = tile.rent;
+            p.money -= rent;
+            players[tile.owner].money += rent;
+            updatePositions();
+            alert(`Pagou M$ ${rent} de aluguel!`);
+            checkGameOver() ? null : nextTurn();
+        } else {
+            nextTurn();
+        }
     }
 
-    function getRent(t) {
-        // Lógica de Monopólio: Dobra o aluguel base se o dono tem o grupo todo e zero casas
-        const groupTiles = TILES.filter(x => x.g === t.g);
-        const hasMonopoly = groupTiles.every(x => x.owner === t.owner);
-        let base = t.houses ? t.r[t.houses] : t.r[0];
-        return (hasMonopoly && !t.houses) ? base * 2 : base;
-    }
-
-    function buy(p, t) {
-        if(p.money >= t.p) { p.money -= t.p; t.owner = p; p.props.push(t); updateUI(); }
-    }
-
-    function next() {
-        turn = (turn + 1) % players.length;
-        document.getElementById('btn-roll').disabled = false;
-        document.getElementById('msg').innerText = `Vez de: ${players[turn].name}`;
-        updateUI();
-    }
-
-    function moveTokens() {
-        players.forEach((p, idx) => {
-            const sq = document.getElementById(`sq-${p.pos}`);
-            const tk = document.getElementById(`token-${p.id}`);
-            const rect = sq.getBoundingClientRect();
-            tk.style.top = (rect.top + window.scrollY + 5 + (idx*2)) + "px";
-            tk.style.left = (rect.left + window.scrollX + 5 + (idx*2)) + "px";
-        });
-    }
-
-    function updateUI() {
-        const bar = document.getElementById('stat-bar');
-        bar.innerHTML = players.map(p => `
-            <div class="p-card ${p.id===turn?'active':''}">
-                <div style="font-weight:800">${p.icon} ${p.name}</div>
-                <div class="p-money">M$ ${p.money}</div>
-            </div>`).join('');
-    }
-
-    function showModal(title, body, btns) {
-        document.getElementById('m-title').innerText = title;
-        document.getElementById('m-body').innerText = body;
-        const footer = document.getElementById('m-footer');
-        footer.innerHTML = "";
-        btns.forEach(b => {
-            const btn = document.createElement('button');
-            btn.className = 'btn btn-play'; btn.style.width = "100%"; btn.style.marginTop = "10px";
-            btn.innerText = b.label; btn.onclick = b.cb;
-            footer.appendChild(btn);
-        });
-        document.getElementById('modal-bg').style.display = 'block';
-        document.getElementById('modal-box').style.display = 'block';
+    function buyTile(pid) {
+        const p = players[pid];
+        const tile = TILES[p.pos];
+        if(p.money >= tile.price) {
+            p.money -= tile.price;
+            tile.owner = pid;
+            document.getElementById(`tile-${p.pos}`).style.boxShadow = `inset 0 0 10px ${p.color}`;
+            updatePositions();
+        } else {
+            alert("Dinheiro insuficiente!");
+        }
+        closeModal();
     }
 
     function closeModal() {
-        document.getElementById('modal-bg').style.display = 'none';
-        document.getElementById('modal-box').style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
+        nextTurn();
     }
 
-    window.onresize = moveTokens;
-    boot();
+    function checkGameOver() {
+        if(players[0].money < 0 || players[1].money < 0) {
+            alert("FIM DE JOGO! Alguém faliu.");
+            location.reload();
+            return true;
+        }
+        return false;
+    }
+
+    function nextTurn() {
+        turn = (turn + 1) % players.length;
+        document.querySelectorAll('.player-box').forEach(b => b.classList.remove('active'));
+        document.getElementById(`p${turn}-card`).classList.add('active');
+        document.getElementById('status-msg').innerText = `Vez do Jogador ${turn + 1}`;
+        
+        isMoving = false;
+        document.getElementById('roll-btn').disabled = false;
+    }
+
+    // Inicialização
+    window.onload = () => {
+        updatePositions();
+        window.addEventListener('resize', updatePositions);
+    };
 </script>
 </body>
 </html>
