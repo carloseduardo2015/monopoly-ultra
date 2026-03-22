@@ -3,113 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monopoly Brasil - Ultimate Digital</title>
+    <title>Monopoly Brasil - Gold Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { 
             --primary: #00eb84; --danger: #ff4757; --bg: #0b0e14; --card: #1c222d; --text: #ffffff; --sub: #94a3b8;
             --accent: #f1c40f; --gold: linear-gradient(45deg, #f1c40f, #f39c12);
-            --luck: #e67e22; --chest: #3498db; --debt: #e74c3c;
         }
         
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; outline: none; }
-        body { background: var(--bg); color: var(--text); margin: 0; padding: 10px; min-height: 100vh; overflow-x: hidden; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 5px; min-height: 100vh; overflow-x: hidden; }
 
-        /* --- SETUP SCREEN --- */
-        #setup-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transition: 0.5s; }
-        .setup-container { width: 100%; max-width: 400px; background: var(--card); padding: 30px; border-radius: 28px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.4); text-align: center; }
-        .input-name { background: rgba(0,0,0,0.3); border: 1px solid #333; color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; width: 100%; font-size: 1rem; transition: 0.3s; }
-        .input-name:focus { border-color: var(--primary); background: rgba(0,235,132,0.05); }
+        /* Setup Screen */
+        #setup-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .setup-container { width: 100%; max-width: 400px; background: var(--card); padding: 30px; border-radius: 28px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+        .input-name { background: rgba(0,0,0,0.3); border: 1px solid #333; color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; width: 100%; font-size: 1rem; }
 
-        /* --- BOARD ENGINE --- */
-        .game-wrapper { display: flex; flex-direction: column; align-items: center; gap: 20px; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.8s ease; }
+        /* Board Layout */
+        .game-container { display: flex; flex-direction: column; align-items: center; gap: 15px; max-width: 1200px; margin: 0 auto; }
         
         #board {
-            width: 360px; height: 360px; 
-            display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr);
-            border: 4px solid #222; background: #151921; position: relative; border-radius: 8px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            width: 350px; height: 350px; display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr);
+            border: 4px solid #222; background: #151921; position: relative; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.5);
         }
 
         .tile { 
-            border: 0.2px solid rgba(255,255,255,0.05); font-size: 5px; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            position: relative; text-align: center; font-weight: 800; overflow: hidden;
+            border: 0.1px solid rgba(255,255,255,0.05); font-size: 5px; display: flex; align-items: center; 
+            justify-content: center; position: relative; text-align: center; font-weight: 800; overflow: hidden;
         }
 
-        /* Color Bars for Tiles */
-        .c-brown { border-top: 5px solid #955436; } .c-lblue { border-top: 5px solid #aae0fa; }
-        .c-pink { border-left: 5px solid #d93a96; } .c-orange { border-left: 5px solid #f7941d; }
-        .c-red { border-bottom: 5px solid #ed1c24; } .c-yellow { border-bottom: 5px solid #fef200; }
-        .c-green { border-right: 5px solid #19a05e; } .c-dblue { border-right: 5px solid #0068a7; }
-        .c-station { background: rgba(255,255,255,0.05); }
+        /* Color Bars */
+        .c-brown { border-top: 4px solid #955436; } .c-lblue { border-top: 4px solid #aae0fa; }
+        .c-pink { border-left: 4px solid #d93a96; } .c-orange { border-left: 4px solid #f7941d; }
+        .c-red { border-bottom: 4px solid #ed1c24; } .c-yellow { border-bottom: 4px solid #fef200; }
+        .c-green { border-right: 4px solid #19a05e; } .c-dblue { border-right: 4px solid #0068a7; }
 
         .pawn { 
-            width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; 
-            position: absolute; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; position: absolute; 
+            transition: all 0.3s ease; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
 
-        .house-marker { position: absolute; top: 1px; left: 1px; font-size: 8px; }
-        .hotel-marker { position: absolute; top: 1px; right: 1px; font-size: 10px; }
+        /* UI Cards */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; width: 100%; }
+        .player-card { background: var(--card); border-radius: 24px; padding: 18px; border: 1px solid rgba(255,255,255,0.08); position: relative; }
+        .player-card.active { border: 2px solid var(--primary); box-shadow: 0 0 15px rgba(0,235,132,0.2); }
 
-        /* --- UI COMPONENTS --- */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; width: 100%; padding-bottom: 50px; }
-        .player-card { 
-            background: var(--card); border-radius: 24px; padding: 18px; border: 1px solid rgba(255,255,255,0.08); 
-            position: relative; transition: 0.3s; 
-        }
-        .player-card.active { border: 2px solid var(--primary); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,235,132,0.1); }
+        .balance-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 18px; text-align: center; margin: 10px 0; }
+        .balance-value { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
+        .debt-tag { color: var(--danger); font-size: 0.7rem; font-weight: 800; }
 
-        .balance-display { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 18px; text-align: center; margin: 10px 0; }
-        .balance-amt { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
-        
-        .btn-roll { 
-            background: var(--gold); color: #000; border: none; padding: 18px 40px; border-radius: 50px; 
-            font-weight: 900; font-size: 1.2rem; cursor: pointer; transition: 0.3s; 
-            box-shadow: 0 10px 0 #b7950b; margin: 10px 0;
-        }
-        .btn-roll:active { transform: translateY(5px); box-shadow: 0 5px 0 #b7950b; }
-        .btn-roll:disabled { opacity: 0.5; cursor: not-allowed; }
+        /* Buttons */
+        .btn-roll { background: var(--gold); color: #000; border: none; padding: 15px 40px; border-radius: 50px; font-weight: 900; cursor: pointer; margin: 10px 0; }
+        .btn-action { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 10px; font-size: 0.7rem; cursor: pointer; }
+        .prop-chip { display: inline-block; font-size: 0.6rem; padding: 3px 6px; border-radius: 4px; margin: 2px; color: #000; font-weight: 800; }
 
-        .action-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 10px; font-size: 0.7rem; cursor: pointer; font-weight: 600; }
-        .action-btn:hover { background: rgba(255,255,255,0.1); }
+        /* History */
+        .history-list { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 8px; margin-top: 10px; height: 70px; overflow-y: auto; font-size: 0.65rem; color: var(--sub); border-left: 2px solid var(--primary); }
 
-        .history-list { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px; margin-top: 10px; height: 80px; overflow-y: auto; font-size: 0.7rem; color: var(--sub); }
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card); width: 90%; max-width: 380px; padding: 25px; border-radius: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
 
-        /* --- MODALS --- */
-        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(10px); }
-        .modal-content { background: var(--card); width: 90%; max-width: 380px; padding: 30px; border-radius: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.1); animation: pop 0.3s ease; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        @keyframes diceShake { 0% { transform: rotate(0); } 25% { transform: rotate(10deg); } 75% { transform: rotate(-10deg); } 100% { transform: rotate(0); } }
-        .rolling { animation: diceShake 0.1s infinite; }
-
+        @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } }
+        .dice-anim { animation: shake 0.1s infinite; font-size: 3rem; display: block; margin: 10px; }
     </style>
 </head>
 <body>
 
     <div id="setup-screen">
         <div class="setup-container">
-            <h1 style="background: var(--gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.8rem; margin: 0;">MONOPOLY</h1>
-            <p style="color: var(--sub); margin-bottom: 25px;">EDIÇÃO DIGITAL BRASIL</p>
-            <input type="number" id="cfg-money" class="input-name" value="1500" placeholder="Saldo Inicial">
+            <h1 style="background: var(--gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MONOPOLY BR</h1>
+            <input type="number" id="cfg-money" class="input-name" value="1500">
             <div id="name-inputs">
                 <input type="text" class="input-name" placeholder="Jogador 1" id="name-0" value="Jogador 1">
                 <input type="text" class="input-name" placeholder="Jogador 2" id="name-1" value="Jogador 2">
             </div>
-            <button class="action-btn" style="width:100%; margin-bottom: 15px; padding: 12px;" onclick="addField()">+ ADICIONAR JOGADOR</button>
-            <button class="btn-roll" style="width:100%; font-size: 1rem; padding: 15px;" onclick="iniciarJogo()">COMEÇAR PARTIDA</button>
+            <button class="btn-action" style="width:100%; margin-bottom:10px" onclick="addField()">+ JOGADOR</button>
+            <button class="btn-roll" style="width:100%" onclick="iniciarJogo()">JOGAR</button>
         </div>
     </div>
 
-    <div id="game-ui" style="display:none" class="game-wrapper">
+    <div id="game-ui" style="display:none" class="game-container">
         <div id="board"></div>
         
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <button id="main-dice-btn" class="btn-roll" onclick="executarTurno()">🎲 LANÇAR DADOS</button>
-            <div id="turn-indicator" style="font-weight: 800; color: var(--primary); letter-spacing: 1px;">VEZ DE: JOGADOR 1</div>
+        <div style="text-align:center">
+            <button id="btn-roll-main" class="btn-roll" onclick="rodarTurno()">🎲 LANÇAR DADOS</button>
+            <div id="turn-info" style="font-weight: 800; color: var(--primary)">VEZ DE: JOGADOR 1</div>
         </div>
 
         <div id="players-grid" class="grid"></div>
@@ -120,48 +98,32 @@
     </div>
 
     <script>
-        // --- DATA & CONFIG ---
-        const CORES_P = ['#FF4757', '#2ED573', '#1E90FF', '#FFA502', '#70A1FF', '#A29BFE'];
-        const cartasSorte = [
-            {t: "Receba dividendos da Petrobras: + M$ 50", v: 50}, {t: "Multa do DETRAN: - M$ 50", v: -50},
-            {t: "Restituição do Imposto de Renda: + M$ 100", v: 100}, {t: "Mensalidade da Faculdade: - M$ 150", v: -150},
-            {t: "Lucro em Criptomoedas: + M$ 200", v: 200}, {t: "Reforma no Apartamento: - M$ 100", v: -100},
-            {t: "Prêmio da Mega-Sena: + M$ 500", v: 500}, {t: "Jantar de Luxo em SP: - M$ 80", v: -80}
-        ];
-
-        const TABULEIRO_DATA = [
+        const CORES = ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#a29bfe', '#747d8c'];
+        const TABULEIRO_CONFIG = [
             {n:"INÍCIO", p:0, c:""}, {n:"Sumaré", p:60, c:"c-brown"}, {n:"SORTE", p:0, c:""}, {n:"Sé", p:60, c:"c-brown"}, {n:"IMPOSTO", p:200, c:""}, {n:"M. Maracanã", p:200, c:"c-station"}, {n:"25 Março", p:100, c:"c-lblue"}, {n:"SORTE", p:0, c:""}, {n:"São João", p:100, c:"c-lblue"}, {n:"Paulista", p:120, c:"c-lblue"},
             {n:"PRISÃO", p:0, c:""}, {n:"Vieira Souto", p:140, c:"c-pink"}, {n:"LUZ", p:150, c:""}, {n:"Niterói", p:160, c:"c-pink"}, {n:"Atlântica", p:160, c:"c-pink"}, {n:"M. Carioca", p:200, c:"c-station"}, {n:"J.K.", p:180, c:"c-orange"}, {n:"SORTE", p:0, c:""}, {n:"Berrini", p:180, c:"c-orange"}, {n:"Faria Lima", p:200, c:"c-orange"},
             {n:"PARADA", p:0, c:""}, {n:"Ipanema", p:220, c:"c-red"}, {n:"SORTE", p:0, c:""}, {n:"Leblon", p:220, c:"c-red"}, {n:"Copacabana", p:240, c:"c-red"}, {n:"M. Consolação", p:200, c:"c-station"}, {n:"C. Jardim", p:260, c:"c-yellow"}, {n:"Pacaembu", p:260, c:"c-yellow"}, {n:"ÁGUA", p:150, c:""}, {n:"Ibirapuera", p:280, c:"c-yellow"},
             {n:"VÁ PRISÃO", p:0, c:""}, {n:"Barra", p:300, c:"c-green"}, {n:"J. Botânico", p:300, c:"c-green"}, {n:"SORTE", p:0, c:""}, {n:"Lagoa", p:320, c:"c-green"}, {n:"M. Repúb.", p:200, c:"c-station"}, {n:"SORTE", p:0, c:""}, {n:"Morumbi", p:350, c:"c-dblue"}, {n:"TAXA LUXO", p:100, c:""}, {n:"Oscar Freire", p:400, c:"c-dblue"}
         ];
 
-        let jogo = {
-            jogadores: [],
-            tiles: TABULEIRO_DATA.map(() => ({ owner: null, houses: 0, hotel: false })),
-            turno: 0,
-            fields: 2
-        };
+        let jogo = { jogadores: [], turno: 0, fields: 2, imoveis: TABULEIRO_CONFIG.map(() => ({ dono: null, casas: 0 })) };
 
-        // --- ENGINE ---
         function criarTabuleiro() {
             const board = document.getElementById("board");
             board.innerHTML = "";
             let grid = Array(121).fill(null);
-            
-            // Mapeamento das posições Monopoly para Grid 11x11
-            for(let i=0; i<=10; i++) grid[110-i] = i; // Bottom
-            for(let i=1; i<=10; i++) grid[110-(i*11)] = 10+i; // Left
-            for(let i=1; i<=10; i++) grid[i] = 20+i; // Top
-            for(let i=1; i<=9; i++) grid[(i*11)+10] = 30+i; // Right
+            for(let i=0; i<=10; i++) grid[110-i] = i; 
+            for(let i=1; i<=10; i++) grid[110-(i*11)] = 10+i; 
+            for(let i=1; i<=10; i++) grid[i] = 20+i; 
+            for(let i=1; i<=9; i++) grid[(i*11)+10] = 30+i; 
 
             grid.forEach((pos, idx) => {
                 let d = document.createElement("div");
                 d.className = "tile";
                 if(pos !== null) {
                     d.id = `tile-${pos}`;
-                    d.innerHTML = `<span style="transform: scale(0.8)">${TABULEIRO_DATA[pos].n}</span>`;
-                    if(TABULEIRO_DATA[pos].c) d.classList.add(TABULEIRO_DATA[pos].c);
+                    d.innerHTML = `<span style="transform:scale(0.8)">${TABULEIRO_CONFIG[pos].n}</span>`;
+                    if(TABULEIRO_CONFIG[pos].c) d.classList.add(TABULEIRO_CONFIG[pos].c);
                 }
                 board.appendChild(d);
             });
@@ -169,212 +131,145 @@
 
         function iniciarJogo() {
             const grana = parseInt(document.getElementById('cfg-money').value) || 1500;
-            jogo.jogadores = [];
             for(let i=0; i<jogo.fields; i++) {
-                const n = document.getElementById(`name-${i}`).value || `J${i+1}`;
                 jogo.jogadores.push({
-                    id: i, nome: n, saldo: grana, pos: 0, cor: CORES_P[i],
-                    historico: ["Entrou no jogo"], preso: false
+                    id: i, nome: document.getElementById(`name-${i}`).value || `J${i+1}`,
+                    saldo: grana, pos: 0, cor: CORES[i], historico: ["Partida iniciada"], preso: false, divida: 0
                 });
             }
-            document.getElementById('setup-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('setup-screen').style.display = 'none';
-                document.getElementById('game-ui').style.display = 'flex';
-                criarTabuleiro();
-                renderizar();
-            }, 500);
+            document.getElementById('setup-screen').style.display = 'none';
+            document.getElementById('game-ui').style.display = 'flex';
+            criarTabuleiro(); render();
         }
 
-        function renderizar() {
-            // Limpar elementos móveis
-            document.querySelectorAll(".pawn, .house-marker, .hotel-marker").forEach(e => e.remove());
-
-            // Renderizar Jogadores
+        function render() {
+            document.querySelectorAll(".pawn").forEach(p => p.remove());
             jogo.jogadores.forEach(j => {
                 let p = document.createElement("div");
-                p.className = "pawn";
-                p.style.background = j.cor;
-                p.id = `pawn-${j.id}`;
-                
-                let tile = document.getElementById(`tile-${j.pos}`);
-                tile.appendChild(p);
-                
-                // Ajuste de posição para múltiplos peões no mesmo tile
-                let offset = j.id * 3;
-                p.style.transform = `translate(${offset}px, ${offset}px)`;
+                p.className = "pawn"; p.style.background = j.cor;
+                document.getElementById(`tile-${j.pos}`).appendChild(p);
+                p.style.transform = `translate(${j.id*2}px, ${j.id*2}px)`;
             });
 
-            // Renderizar Imóveis
-            jogo.tiles.forEach((t, i) => {
-                if(t.owner !== null) {
-                    let tileEl = document.getElementById(`tile-${i}`);
-                    tileEl.style.backgroundColor = `${jogo.jogadores[t.owner].cor}22`;
-                    if(t.hotel) {
-                        tileEl.innerHTML += `<span class="hotel-marker">🏨</span>`;
-                    } else if(t.houses > 0) {
-                        tileEl.innerHTML += `<span class="house-marker">🏠${t.houses}</span>`;
-                    }
-                }
-            });
-
-            // UI Cards
             const grid = document.getElementById('players-grid');
             grid.innerHTML = jogo.jogadores.map((j, i) => `
                 <div class="player-card ${jogo.turno === i ? 'active' : ''}">
-                    <div style="display:flex; justify-content:space-between; align-items:center">
+                    <div style="display:flex; justify-content:space-between">
                         <b style="color:${j.cor}">${j.nome.toUpperCase()}</b>
-                        ${j.preso ? '⛓️ PRESO' : ''}
+                        <span>${j.preso ? '⛓️ PRESO' : '📍 CASA '+j.pos}</span>
                     </div>
-                    <div class="balance-display">
-                        <div class="balance-amt">M$ ${j.saldo.toLocaleString()}</div>
+                    <div class="balance-box">
+                        <div class="balance-value">M$ ${j.saldo.toLocaleString()}</div>
+                        ${j.divida > 0 ? `<div class="debt-tag">DÍVIDA BANCÁRIA: M$ ${j.divida}</div>` : ''}
                     </div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px">
-                        <button class="action-btn" onclick="pagarManual(${i})">PAGAR</button>
-                        <button class="action-btn" onclick="construir(${i})">CONSTRUIR</button>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px">
+                        <button class="btn-action" onclick="abrirPagar(${i})">💸 PAGAR</button>
+                        <button class="btn-action" onclick="abrirComprar(${i})">🏠 COMPRAR</button>
+                        <button class="btn-action" onclick="pegarEmprestimo(${i})">🏦 EMPRÉSTIMO</button>
+                        <button class="btn-action" onclick="quitarDivida(${i})">✅ QUITAR</button>
                     </div>
-                    <div class="history-list">
-                        ${j.historico.map(h => `<div>• ${h}</div>`).join('')}
-                    </div>
+                    <div class="history-list">${j.historico.map(h => `<div>• ${h}</div>`).join('')}</div>
                 </div>
             `).join('');
-
-            document.getElementById('turn-indicator').innerText = `VEZ DE: ${jogo.jogadores[jogo.turno].nome.toUpperCase()}`;
-            document.getElementById('turn-indicator').style.color = jogo.jogadores[jogo.turno].cor;
+            document.getElementById('turn-info').innerText = `VEZ DE: ${jogo.jogadores[jogo.turno].nome.toUpperCase()}`;
         }
 
-        // --- TURNO ENGINE ---
-        async function executarTurno() {
-            const btn = document.getElementById('main-dice-btn');
-            btn.disabled = true;
-            
+        async function rodarTurno() {
             let j = jogo.jogadores[jogo.turno];
             let d1 = Math.floor(Math.random()*6)+1;
             let d2 = Math.floor(Math.random()*6)+1;
-            let total = d1 + d2;
-
-            abrirModal(`
-                <h1 class="rolling">🎲🎲</h1>
-                <p>${j.nome} está lançando os dados...</p>
-                <div style="font-size: 3rem; font-weight: 800; color: var(--primary);">${total}</div>
-            `);
-
-            await new Promise(r => setTimeout(r, 1200));
-
-            if(j.preso) {
-                if(d1 === d2) {
-                    j.preso = false;
-                    j.historico.unshift("Tirou duplos e saiu da prisão!");
-                } else {
-                    j.historico.unshift("Continua preso...");
-                }
-            } else {
-                // Animação de caminhada
-                for(let step = 1; step <= total; step++) {
-                    j.pos = (j.pos + 1) % 40;
-                    if(j.pos === 0) {
-                        j.saldo += 200;
-                        j.historico.unshift("Passou pelo Início (+200)");
-                    }
-                    renderizar();
-                    await new Promise(r => setTimeout(r, 150));
-                }
-                processarPouso(j);
-            }
-
-            fecharModal();
-            jogo.turno = (jogo.turno + 1) % jogo.jogadores.length;
-            btn.disabled = false;
-            renderizar();
-        }
-
-        function processarPouso(j) {
-            let tIdx = j.pos;
-            let tileCfg = TABULEIRO_DATA[tIdx];
-            let tileEstado = jogo.tiles[tIdx];
-
-            // 1. Especial tiles
-            if(tileCfg.n === "VÁ PRISÃO") { j.pos = 10; j.preso = true; alert("POLÍCIA! Vá para a prisão!"); return; }
-            if(tileCfg.n === "SORTE") { sortearCarta(j); return; }
-            if(tileCfg.n === "IMPOSTO" || tileCfg.n === "TAXA LUXO") {
-                j.saldo -= tileCfg.p;
-                j.historico.unshift(`Pagou ${tileCfg.n} (-M$ ${tileCfg.p})`);
-                return;
-            }
-
-            // 2. Propriedades
-            if(tileCfg.p > 0) {
-                if(tileEstado.owner === null) {
-                    if(confirm(`Deseja comprar ${tileCfg.n} por M$ ${tileCfg.p}?`)) {
-                        if(j.saldo >= tileCfg.p) {
-                            j.saldo -= tileCfg.p;
-                            tileEstado.owner = j.id;
-                            j.historico.unshift(`Comprou ${tileCfg.n}`);
-                        } else { alert("Saldo insuficiente!"); }
-                    }
-                } else if(tileEstado.owner !== j.id) {
-                    let dono = jogo.jogadores[tileEstado.owner];
-                    let aluguel = Math.floor(tileCfg.p * 0.15);
-                    if(tileEstado.hotel) aluguel *= 5;
-                    else if(tileEstado.houses > 0) aluguel *= (tileEstado.houses + 1);
-                    
-                    j.saldo -= aluguel;
-                    dono.saldo += aluguel;
-                    j.historico.unshift(`Aluguel: -M$ ${aluguel} para ${dono.nome}`);
-                    dono.historico.unshift(`Recebeu aluguel: +M$ ${aluguel}`);
-                }
-            }
-        }
-
-        // --- SISTEMAS AUXILIARES ---
-        function sortearCarta(j) {
-            let c = cartasSorte[Math.floor(Math.random()*cartasSorte.length)];
-            j.saldo += c.v;
-            j.historico.unshift(`SORTE: ${c.t}`);
-            abrirModal(`<h3>SORTE OU REVÉS</h3><p style="font-size:1.2rem">${c.t}</p><button class="btn-roll" style="font-size:1rem" onclick="fecharModal()">OK</button>`);
-        }
-
-        function construir(idx) {
-            let j = jogo.jogadores[idx];
-            let t = jogo.tiles[j.pos];
-            if(t.owner !== idx) return alert("Você precisa ser dono deste lugar!");
-            if(t.hotel) return alert("Já é um Hotel Máximo!");
             
-            let custo = 150;
-            if(j.saldo >= custo) {
-                if(t.houses < 4) {
-                    t.houses++;
-                    j.historico.unshift(`Construiu casa em ${TABULEIRO_DATA[j.pos].n}`);
-                } else {
-                    t.houses = 0; t.hotel = true;
-                    j.historico.unshift(`UPOU PARA HOTEL em ${TABULEIRO_DATA[j.pos].n}`);
+            abrirModal(`<span class="dice-anim">🎲</span><h2>${d1+d2}</h2><p>${j.nome} jogando...</p>`);
+            await new Promise(r => setTimeout(r, 1000));
+            fecharModal();
+
+            if(j.preso && d1 !== d2) {
+                log(j.id, "Continua preso (tirou "+(d1+d2)+")");
+            } else {
+                j.preso = false;
+                for(let s=0; s<d1+d2; s++) {
+                    j.pos = (j.pos + 1) % 40;
+                    if(j.pos === 0) { j.saldo += 200; log(j.id, "Passou no início (+200)"); }
+                    render();
+                    await new Promise(r => setTimeout(r, 100));
                 }
-                j.saldo -= custo;
-                renderizar();
-            } else { alert("Sem dinheiro para obras!"); }
+                checarCasa(j);
+            }
+            jogo.turno = (jogo.turno + 1) % jogo.jogadores.length;
+            render();
         }
 
-        function pagarManual(id) {
-            let v = prompt("Quanto deseja pagar ao Banco?");
-            if(v && !isNaN(v)) {
-                jogo.jogadores[id].saldo -= parseInt(v);
-                jogo.jogadores[id].historico.unshift(`Pagamento manual: -M$ ${v}`);
-                renderizar();
+        function checarCasa(j) {
+            const tile = TABULEIRO_CONFIG[j.pos];
+            if(tile.n === "VÁ PRISÃO") { j.pos = 10; j.preso = true; alert("POLÍCIA! Vá para a prisão!"); }
+            if(tile.n === "SORTE") {
+                let v = [50, -50, 100, -100, 200, -150][Math.floor(Math.random()*6)];
+                j.saldo += v;
+                log(j.id, "Sorte/Revés: " + (v > 0 ? "+" : "") + v);
+                alert("Sorte/Revés: " + (v > 0 ? "Recebeu " : "Pagou ") + Math.abs(v));
             }
         }
 
-        function addField() { 
-            if(jogo.fields < 6) { 
-                let i = document.createElement('input'); 
-                i.className='input-name'; i.id=`name-${jogo.fields}`; i.placeholder=`Jogador ${jogo.fields+1}`; 
-                document.getElementById('name-inputs').appendChild(i); 
-                jogo.fields++; 
-            } 
+        function abrirPagar(id) {
+            let html = `<h3>PAGAMENTO</h3><input type="number" id="val-p" class="input-name" placeholder="Valor">
+            <select id="dest-p" class="input-name"><option value="b">BANCO</option>`;
+            jogo.jogadores.forEach(p => { if(p.id !== id) html += `<option value="${p.id}">${p.nome}</option>`; });
+            html += `</select><button class="btn-roll" onclick="confirmarPagar(${id})">CONFIRMAR</button>`;
+            abrirModal(html);
         }
 
+        function confirmarPagar(de) {
+            const v = parseInt(document.getElementById('val-p').value);
+            const para = document.getElementById('dest-p').value;
+            if(v > 0 && jogo.jogadores[de].saldo >= v) {
+                jogo.jogadores[de].saldo -= v;
+                if(para === 'b') log(de, "Pagou M$ "+v+" ao banco");
+                else { 
+                    jogo.jogadores[para].saldo += v; 
+                    log(de, "Pagou M$ "+v+" para "+jogo.jogadores[para].nome);
+                    log(para, "Recebeu M$ "+v+" de "+jogo.jogadores[de].nome);
+                }
+                fecharModal(); render();
+            } else { alert("Saldo insuficiente!"); }
+        }
+
+        function abrirComprar(id) {
+            const tile = TABULEIRO_CONFIG[jogo.jogadores[id].pos];
+            if(tile.p > 0) {
+                if(confirm(`Comprar ${tile.n} por M$ ${tile.p}?`)) {
+                    if(jogo.jogadores[id].saldo >= tile.p) {
+                        jogo.jogadores[id].saldo -= tile.p;
+                        log(id, "Comprou " + tile.n);
+                        render();
+                    } else { alert("Dinheiro insuficiente!"); }
+                }
+            } else { alert("Esta casa não pode ser comprada!"); }
+        }
+
+        function pegarEmprestimo(id) {
+            jogo.jogadores[id].saldo += 500;
+            jogo.jogadores[id].divida += 550;
+            log(id, "Empréstimo de M$ 500");
+            render();
+        }
+
+        function quitarDivida(id) {
+            let j = jogo.jogadores[id];
+            if(j.saldo >= j.divida && j.divida > 0) {
+                j.saldo -= j.divida;
+                j.divida = 0;
+                log(id, "Quitou dívida bancária");
+                render();
+            }
+        }
+
+        function log(id, msg) { jogo.jogadores[id].historico.unshift(msg); }
+        function addField() { if(jogo.fields < 6) { 
+            let i = document.createElement('input'); i.className='input-name'; i.id=`name-${jogo.fields}`; i.placeholder=`Jogador ${jogo.fields+1}`; 
+            document.getElementById('name-inputs').appendChild(i); jogo.fields++; 
+        } }
         function abrirModal(h) { document.getElementById('modal-content').innerHTML = h; document.getElementById('modal').style.display = 'flex'; }
         function fecharModal() { document.getElementById('modal').style.display = 'none'; }
-
     </script>
 </body>
 </html>
