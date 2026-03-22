@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monopoly Brasil Pro - Estável</title>
+    <title>Monopoly Brasil - Estável</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -13,48 +13,45 @@
         * { box-sizing: border-box; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* Tela de Setup */
+        /* Setup */
         #setup-screen { position: fixed; inset: 0; background: radial-gradient(circle, #1e293b 0%, #0f172a 100%); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .setup-card { background: var(--panel); padding: 25px; border-radius: 24px; width: 100%; max-width: 400px; border: 2px solid var(--gold); box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; }
-        .setup-list { max-height: 250px; overflow-y: auto; margin: 15px 0; }
-        .player-input { display: flex; gap: 10px; margin-bottom: 10px; background: #334155; padding: 10px; border-radius: 12px; align-items: center; }
+        .setup-card { background: var(--panel); padding: 25px; border-radius: 24px; width: 100%; max-width: 400px; border: 2px solid var(--gold); text-align: center; }
+        .setup-list { max-height: 200px; overflow-y: auto; margin: 15px 0; }
+        .player-input { display: flex; gap: 10px; margin-bottom: 8px; background: #334155; padding: 8px; border-radius: 12px; }
         .player-input input { background: transparent; border: none; color: white; border-bottom: 1px solid #64748b; flex: 1; outline: none; }
 
-        /* HUD Superior */
-        #hud { display: flex; gap: 8px; padding: 10px; overflow-x: auto; background: #0f172a; border-bottom: 1px solid #334155; height: 80px; }
-        .player-chip { min-width: 100px; background: #1e293b; padding: 8px; border-radius: 12px; border: 2px solid transparent; transition: 0.3s; flex-shrink: 0; }
-        .player-chip.active { border-color: var(--gold); transform: translateY(2px); background: #334155; }
-        .money-text { color: #4ade80; font-weight: 900; font-size: 13px; }
+        /* HUD */
+        #hud { display: flex; gap: 8px; padding: 10px; overflow-x: auto; background: #0f172a; border-bottom: 1px solid #334155; height: 85px; }
+        .player-chip { min-width: 100px; background: #1e293b; padding: 8px; border-radius: 12px; border: 2px solid transparent; flex-shrink: 0; }
+        .player-chip.active { border-color: var(--gold); background: #334155; }
+        .money-text { color: #4ade80; font-weight: 900; }
 
-        /* Tabuleiro */
-        .game-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; position: relative; }
-        #board-wrapper { position: relative; width: 98vw; height: 98vw; max-width: 500px; max-height: 500px; background: #000; padding: 2px; border-radius: 4px; }
+        /* Board */
+        .game-container { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+        #board-wrapper { width: 98vw; height: 98vw; max-width: 480px; max-height: 480px; background: #000; padding: 2px; }
         #board { display: grid; width: 100%; height: 100%; grid-template-columns: 1.3fr repeat(9, 1fr) 1.3fr; grid-template-rows: 1.3fr repeat(9, 1fr) 1.3fr; gap: 1px; }
 
-        .tile { background: #f8fafc; position: relative; display: flex; flex-direction: column; color: #000; font-size: 6px; overflow: hidden; }
-        .t-color { height: 20%; width: 100%; border-bottom: 1px solid #000; }
-        .t-info { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-weight: 700; padding: 1px; }
-        .t-price { font-size: 5px; font-weight: 900; margin-bottom: 1px; text-align: center; }
+        .tile { background: #f8fafc; position: relative; display: flex; flex-direction: column; color: #000; overflow: hidden; }
+        .t-color { height: 18%; width: 100%; border-bottom: 1px solid #000; }
+        .t-info { flex: 1; font-size: 6px; font-weight: 700; text-align: center; display: flex; align-items: center; justify-content: center; padding: 1px; pointer-events: none; }
+        
+        /* Peões dentro das casas */
+        .pawn-container { position: absolute; inset: 0; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; padding: 2px; gap: 1px; pointer-events: none; }
+        .pawn-char { font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); z-index: 10; }
 
-        /* Container de Peças dentro da casa */
-        .pawn-slot { position: absolute; inset: 0; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: center; pointer-events: none; padding: 2px; gap: 1px; }
-        .pawn-mini { font-size: 12px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        /* Dice Area */
+        .center-area { grid-area: 2/2/11/11; background: var(--board-green); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .die { width: 35px; height: 35px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 5px; box-shadow: 0 3px 0 #cbd5e1; }
 
-        /* Controles Inferiores */
-        .controls { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 8px; padding: 12px; background: #1e293b; }
+        /* Controls */
+        .controls { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 10px; padding: 15px; background: #1e293b; }
         .btn { padding: 12px; border-radius: 10px; border: none; font-weight: 900; text-transform: uppercase; cursor: pointer; }
-        .btn-roll { background: var(--gold); color: #000; font-size: 16px; }
-        .btn-roll:disabled { opacity: 0.5; cursor: not-allowed; }
-        .btn-util { background: #475569; color: white; font-size: 9px; }
-
-        /* Dados */
-        .dice-area { grid-area: 2/2/11/11; background: var(--board-green); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .dice-box { display: flex; gap: 10px; margin-bottom: 8px; }
-        .die { width: 35px; height: 35px; background: white; color: black; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 3px 0 #cbd5e1; }
+        .btn-roll { background: var(--gold); color: #000; font-size: 18px; }
+        .btn-util { background: #475569; color: white; font-size: 10px; }
 
         /* Modal */
-        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 1000; backdrop-filter: blur(3px); }
-        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; background: white; color: #0f172a; border-radius: 20px; padding: 20px; display: none; z-index: 1001; text-align: center; }
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 1000; }
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; background: white; color: #000; border-radius: 20px; padding: 20px; display: none; z-index: 1001; text-align: center; }
     </style>
 </head>
 <body>
@@ -62,10 +59,10 @@
 <div id="setup-screen">
     <div class="setup-card">
         <h2 style="color:var(--gold)">MONOPOLY BRASIL</h2>
-        <p>Quantos jogadores?</p>
-        <input type="number" id="p-count" min="2" max="6" value="2" onchange="initSetup()" style="width: 60px; padding: 8px; border-radius: 8px; text-align: center;">
+        <p>Número de jogadores:</p>
+        <input type="number" id="p-count" min="2" max="6" value="2" onchange="initSetup()">
         <div id="setup-list" class="setup-list"></div>
-        <button class="btn btn-roll" style="width:100%" onclick="startGame()">COMEÇAR JOGO</button>
+        <button class="btn btn-roll" style="width:100%" onclick="startGame()">JOGAR</button>
     </div>
 </div>
 
@@ -74,21 +71,21 @@
 <div class="game-container">
     <div id="board-wrapper">
         <div id="board">
-            <div class="dice-area">
-                <div class="dice-box">
-                    <div id="die1" class="die">⚀</div>
-                    <div id="die2" class="die">⚀</div>
+            <div class="center-area">
+                <div style="display:flex">
+                    <div id="die1" class="die">?</div>
+                    <div id="die2" class="die">?</div>
                 </div>
-                <div id="status" style="color:#1e293b; font-weight:800; font-size:12px;">AGUARDANDO...</div>
+                <div id="status" style="color:#1e293b; font-weight:800; font-size:12px; margin-top:10px">BOA SORTE!</div>
             </div>
         </div>
     </div>
 </div>
 
 <div class="controls">
-    <button class="btn btn-util" onclick="alert('Funcionalidade em breve!')">BENS</button>
-    <button class="btn btn-roll" id="roll-btn" onclick="handleRoll()">JOGAR DADOS</button>
-    <button class="btn btn-util" onclick="location.reload()">REINICIAR</button>
+    <button class="btn btn-util" onclick="alert('Funcionalidade em desenvolvimento')">BENS</button>
+    <button class="btn btn-roll" id="roll-btn" onclick="handleRoll()">DADOS</button>
+    <button class="btn btn-util" onclick="location.reload()">SAIR</button>
 </div>
 
 <div id="overlay"></div>
@@ -100,50 +97,30 @@
 
 <script>
     const TILES = [
-        {n: "PARTIDA", type: "go"},
-        {n: "AV. SUMARÉ", type: "prop", g: "brown", p: 60, r: [2, 10, 30, 90, 160, 250], h: 50},
-        {n: "COFRE", type: "chest"},
-        {n: "AV. SÃO JOÃO", type: "prop", g: "brown", p: 60, r: [4, 20, 60, 180, 320, 450], h: 50},
-        {n: "IMPOSTO", type: "tax", val: 200},
-        {n: "EST. MARACANÃ", type: "station", p: 200, icon: "🚆"},
-        {n: "RUA 25 MARÇO", type: "prop", g: "lblue", p: 100, r: [6, 30, 90, 270, 400, 550], h: 50},
-        {n: "SORTE", type: "luck"},
-        {n: "AV. PAULISTA", type: "prop", g: "lblue", p: 100, r: [6, 30, 90, 270, 400, 550], h: 50},
-        {n: "AV. V. SOUTO", type: "prop", g: "lblue", p: 120, r: [8, 40, 100, 300, 450, 600], h: 50},
-        {n: "PRISÃO", type: "jail"},
-        {n: "AV. ATLÂNTICA", type: "prop", g: "pink", p: 140, r: [10, 50, 150, 450, 625, 750], h: 100},
-        {n: "CIA ELÉTRICA", type: "util", p: 150, icon: "💡"},
-        {n: "AV. NITERÓI", type: "prop", g: "pink", p: 140, r: [10, 50, 150, 450, 625, 750], h: 100},
-        {n: "BRIG. F. LIMA", type: "prop", g: "pink", p: 160, r: [12, 60, 180, 500, 700, 900], h: 100},
-        {n: "EST. CARIOCA", type: "station", p: 200, icon: "🚆"},
-        {n: "L. BERRINI", type: "prop", g: "orange", p: 180, r: [14, 70, 200, 550, 750, 950], h: 100},
-        {n: "COFRE", type: "chest"},
-        {n: "AV. PRES. JK", type: "prop", g: "orange", p: 180, r: [14, 70, 200, 550, 750, 950], h: 100},
-        {n: "AV. 9 JULHO", type: "prop", g: "orange", p: 200, r: [16, 80, 220, 600, 800, 1000], h: 100},
-        {n: "PARADA", type: "free"},
-        {n: "AV. EUROPA", type: "prop", g: "red", p: 220, r: [18, 90, 250, 700, 875, 1050], h: 150},
-        {n: "SORTE", type: "luck"},
-        {n: "AV. AUGUSTA", type: "prop", g: "red", p: 220, r: [18, 90, 250, 700, 875, 1050], h: 150},
-        {n: "PACAEMBU", type: "prop", g: "red", p: 240, r: [20, 100, 300, 750, 925, 1100], h: 150},
-        {n: "EST. CONSOLAÇÃO", type: "station", p: 200, icon: "🚆"},
-        {n: "INTERLAGOS", type: "prop", g: "yellow", p: 260, r: [22, 110, 330, 800, 975, 1150], h: 150},
-        {n: "MORUMBI", type: "prop", g: "yellow", p: 260, r: [22, 110, 330, 800, 975, 1150], h: 150},
-        {n: "CIA ÁGUA", type: "util", p: 150, icon: "🚰"},
-        {n: "IBIRAPUERA", type: "prop", g: "yellow", p: 280, r: [24, 120, 360, 850, 1025, 1200], h: 150},
-        {n: "VÁ P/ PRISÃO", type: "gojail"},
-        {n: "B. TIJUCA", type: "prop", g: "green", p: 300, r: [26, 130, 390, 900, 1100, 1275], h: 200},
-        {n: "J. BOTÂNICO", type: "prop", g: "green", p: 300, r: [26, 130, 390, 900, 1100, 1275], h: 200},
-        {n: "COFRE", type: "chest"},
-        {n: "IPANEMA", type: "prop", g: "green", p: 320, r: [28, 150, 450, 1000, 1200, 1400], h: 200},
-        {n: "EST. REPÚBLICA", type: "station", p: 200, icon: "🚆"},
-        {n: "SORTE", type: "luck"},
-        {n: "LEBLON", type: "prop", g: "blue", p: 350, r: [35, 175, 500, 1100, 1300, 1500], h: 200},
-        {n: "RIQUEZA", type: "tax", val: 100},
-        {n: "AV. OCEÂNICA", type: "prop", g: "blue", p: 400, r: [50, 200, 600, 1400, 1700, 2000], h: 200}
+        {n: "PARTIDA", type: "go"}, {n: "AV. SUMARÉ", type: "prop", g: "brown", p: 60, r: [2, 10]},
+        {n: "COFRE", type: "chest"}, {n: "AV. SÃO JOÃO", type: "prop", g: "brown", p: 60, r: [4, 20]},
+        {n: "IMPOSTO", type: "tax", val: 200}, {n: "EST. MARACANÃ", type: "station", p: 200},
+        {n: "RUA 25 MARÇO", type: "prop", g: "lblue", p: 100, r: [6, 30]}, {n: "SORTE", type: "luck"},
+        {n: "AV. PAULISTA", type: "prop", g: "lblue", p: 100, r: [6, 30]}, {n: "AV. V. SOUTO", type: "prop", g: "lblue", p: 120, r: [8, 40]},
+        {n: "PRISÃO", type: "jail"}, {n: "AV. ATLÂNTICA", type: "prop", g: "pink", p: 140, r: [10, 50]},
+        {n: "CIA ELÉTRICA", type: "util", p: 150}, {n: "AV. NITERÓI", type: "prop", g: "pink", p: 140, r: [10, 50]},
+        {n: "F. LIMA", type: "prop", g: "pink", p: 160, r: [12, 60]}, {n: "EST. CARIOCA", type: "station", p: 200},
+        {n: "BERRINI", type: "prop", g: "orange", p: 180, r: [14, 70]}, {n: "COFRE", type: "chest"},
+        {n: "PRES. JK", type: "prop", g: "orange", p: 180, r: [14, 70]}, {n: "9 DE JULHO", type: "prop", g: "orange", p: 200, r: [16, 80]},
+        {n: "PARADA", type: "free"}, {n: "AV. EUROPA", type: "prop", g: "red", p: 220, r: [18, 90]},
+        {n: "SORTE", type: "luck"}, {n: "AV. AUGUSTA", type: "prop", g: "red", p: 220, r: [18, 90]},
+        {n: "PACAEMBU", type: "prop", g: "red", p: 240, r: [20, 100]}, {n: "EST. CONSOLAÇÃO", type: "station", p: 200},
+        {n: "INTERLAGOS", type: "prop", g: "yellow", p: 260, r: [22, 110]}, {n: "MORUMBI", type: "prop", g: "yellow", p: 260, r: [22, 110]},
+        {n: "CIA ÁGUA", type: "util", p: 150}, {n: "IBIRAPUERA", type: "prop", g: "yellow", p: 280, r: [24, 120]},
+        {n: "VÁ P/ PRISÃO", type: "gojail"}, {n: "B. TIJUCA", type: "prop", g: "green", p: 300, r: [26, 130]},
+        {n: "J. BOTÂNICO", type: "prop", g: "green", p: 300, r: [26, 130]}, {n: "COFRE", type: "chest"},
+        {n: "IPANEMA", type: "prop", g: "green", p: 320, r: [28, 150]}, {n: "EST. REPÚBLICA", type: "station", p: 200},
+        {n: "SORTE", type: "luck"}, {n: "LEBLON", type: "prop", g: "blue", p: 350, r: [35, 175]},
+        {n: "RIQUEZA", type: "tax", val: 100}, {n: "AV. OCEÂNICA", type: "prop", g: "blue", p: 400, r: [50, 200]}
     ];
 
     const COLORS = { brown: "#78350f", lblue: "#7dd3fc", pink: "#db2777", orange: "#f97316", red: "#ef4444", yellow: "#facc15", green: "#15803d", blue: "#1e40af" };
-    let players = [], turn = 0, doubles = 0;
+    let players = [], turn = 0;
 
     function initSetup() {
         const n = document.getElementById('p-count').value;
@@ -159,7 +136,7 @@
         const n = parseInt(document.getElementById('p-count').value);
         const icons = ["🎩","🚗","🐕","🚀","🏎️","🚢"];
         for(let i=0; i<n; i++) {
-            players.push({ id: i, name: document.getElementById(`p-name-${i}`).value, icon: icons[i], money: 1500, pos: 0, jail: 0, props: [] });
+            players.push({ id: i, name: document.getElementById(`p-name-${i}`).value, icon: icons[i], money: 1500, pos: 0 });
         }
         document.getElementById('setup-screen').style.display = 'none';
         renderBoard();
@@ -179,8 +156,7 @@
             d.innerHTML = `
                 ${t.g ? `<div class="t-color" style="background:${COLORS[t.g]}"></div>` : ''}
                 <div class="t-info">${t.n}</div>
-                ${t.p ? `<div class="t-price">M$ ${t.p}</div>` : ''}
-                <div class="pawn-slot" id="slot-${i}"></div>
+                <div class="pawn-container" id="pawn-box-${i}"></div>
             `;
             b.appendChild(d);
         });
@@ -190,59 +166,46 @@
     async function handleRoll() {
         const p = players[turn];
         document.getElementById('roll-btn').disabled = true;
-
         const d1 = Math.ceil(Math.random()*6), d2 = Math.ceil(Math.random()*6);
         const diceChars = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
         document.getElementById('die1').innerText = diceChars[d1];
         document.getElementById('die2').innerText = diceChars[d2];
 
-        if(p.jail > 0) {
-            if(d1 === d2) { p.jail = 0; movePawn(d1+d2); }
-            else { p.jail--; showModal("PRISÃO", "Você não tirou duplos.", [{t: "PAGAR M$ 50", c: "#ef4444", f: () => { p.money -= 50; p.jail=0; movePawn(d1+d2); }}, {t: "ESPERAR", c: "#64748b", f: nextTurn}]); }
-            return;
-        }
-
-        movePawn(d1 + d2);
-    }
-
-    async function movePawn(steps) {
-        const p = players[turn];
+        let steps = d1 + d2;
         for(let i=0; i<steps; i++) {
             p.pos = (p.pos + 1) % 40;
             if(p.pos === 0) p.money += 200;
             updatePawns();
-            await new Promise(r => setTimeout(r, 150));
+            await new Promise(r => setTimeout(r, 100)); // Animação suave
         }
+        
         processTile();
     }
 
     function processTile() {
         const p = players[turn];
         const t = TILES[p.pos];
-
-        if(t.type === "gojail") {
-            p.pos = 10; p.jail = 3; updatePawns();
-            showModal("POLÍCIA", "Vá para a prisão!", [{t: "OK", c: "#ef4444", f: nextTurn}]);
-        } else if(t.p > 0) {
-            if(!t.owner) {
-                showModal(t.n, `Comprar por M$ ${t.p}?`, [
-                    {t: "COMPRAR", c: "#22c55e", f: () => { p.money -= t.p; t.owner = p; p.props.push(p.pos); nextTurn(); }},
-                    {t: "PASSAR", c: "#64748b", f: nextTurn}
-                ]);
-            } else if(t.owner !== p) {
-                let rent = t.r[0];
-                p.money -= rent; t.owner.money += rent;
-                showModal("ALUGUEL", `Pagou M$ ${rent} para ${t.owner.name}`, [{t: "PAGAR", c: "#ef4444", f: nextTurn}]);
-            } else nextTurn();
-        } else nextTurn();
+        
+        if(t.p > 0 && !t.owner) {
+            showModal(t.n, `Comprar por M$ ${t.p}?`, [
+                {t: "COMPRAR", c: "#22c55e", f: () => { p.money -= t.p; t.owner = p; nextTurn(); }},
+                {t: "PASSAR", c: "#64748b", f: nextTurn}
+            ]);
+        } else if(t.owner && t.owner !== p) {
+            const rent = t.r[0];
+            p.money -= rent; t.owner.money += rent;
+            showModal("ALUGUEL", `Pagou M$ ${rent} para ${t.owner.name}`, [{t: "PAGAR", c: "#ef4444", f: nextTurn}]);
+        } else {
+            setTimeout(nextTurn, 500);
+        }
         updateUI();
     }
 
     function updatePawns() {
-        document.querySelectorAll('.pawn-slot').forEach(s => s.innerHTML = "");
+        document.querySelectorAll('.pawn-container').forEach(c => c.innerHTML = "");
         players.forEach(p => {
-            const slot = document.getElementById(`slot-${p.pos}`);
-            if(slot) slot.innerHTML += `<span class="pawn-mini">${p.icon}</span>`;
+            const container = document.getElementById(`pawn-box-${p.pos}`);
+            if(container) container.innerHTML += `<span class="pawn-char">${p.icon}</span>`;
         });
     }
 
@@ -253,25 +216,26 @@
                 <div style="font-weight:900">${p.icon} ${p.name}</div>
                 <div class="money-text">M$ ${p.money}</div>
             </div>`).join('');
-        document.getElementById('status').innerText = `VEZ DE: ${players[turn].name.toUpperCase()}`;
     }
 
     function nextTurn() {
         closeModal();
         turn = (turn + 1) % players.length;
         document.getElementById('roll-btn').disabled = false;
+        document.getElementById('status').innerText = `VEZ DE: ${players[turn].name}`;
         updateUI();
     }
 
     function showModal(t, b, btns) {
         document.getElementById('m-title').innerText = t;
         document.getElementById('m-body').innerHTML = b;
-        const f = document.getElementById('m-footer'); f.innerHTML = "";
+        const footer = document.getElementById('m-footer');
+        footer.innerHTML = "";
         btns.forEach(btn => {
             const bEl = document.createElement('button');
             bEl.className = 'btn'; bEl.style.width = "100%"; bEl.style.marginTop = "8px";
             bEl.style.background = btn.c; bEl.style.color = "white"; bEl.innerText = btn.t; bEl.onclick = btn.f;
-            f.appendChild(bEl);
+            footer.appendChild(bEl);
         });
         document.getElementById('overlay').style.display = 'block';
         document.getElementById('modal').style.display = 'block';
