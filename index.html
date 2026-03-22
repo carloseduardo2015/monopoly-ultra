@@ -1,311 +1,348 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monopoly Ultra Mobile</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monopoly Ultra Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #FFD700;
+            --primary: #4facfe;
+            --board-green: #CDE6D0;
+            --glass: rgba(255, 255, 255, 0.1);
+            /* Cores dos Jogadores */
+            --p0: #2ecc71; --p1: #e91e63; --p2: #3498db; --p3: #f1c40f; 
+            --p4: #9b59b6; --p5: #e67e22; --p6: #1abc9c; --p7: #ecf0f1;
+            --p8: #34495e; --p9: #ff7675;
+        }
 
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+        * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { 
+            margin: 0; background: radial-gradient(circle, #1e1e2f, #0a0a0a); 
+            color: white; height: 100vh; display: flex; flex-direction: column; 
+            align-items: center; overflow: hidden; 
+        }
 
-<style>
-:root{
---gold:#FFD700;
---bg:#0f0f0f;
---glass:rgba(255,255,255,0.08);
-}
+        /* TELA DE SETUP (LOBBY) */
+        #setup-screen { 
+            position: fixed; inset: 0; background: inherit; z-index: 2000; 
+            display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; 
+        }
+        .setup-header { text-align: center; margin-bottom: 20px; }
+        .setup-header h1 { color: var(--gold); font-size: 2.2rem; text-shadow: 0 0 15px rgba(255,215,0,0.4); margin: 0; }
+        
+        .setup-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 15px; width: 100%; max-width: 1100px; 
+        }
+        .config-card { 
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
+            padding: 15px; border-radius: 20px; backdrop-filter: blur(10px);
+        }
+        .name-input { 
+            width: 100%; background: #2a2a3a; border: 2px solid #444; color: white; 
+            padding: 10px; border-radius: 10px; font-weight: bold; margin-bottom: 10px;
+        }
+        .avatar-list { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+        .avatar-opt { 
+            font-size: 22px; cursor: pointer; padding: 5px; border-radius: 10px; 
+            transition: 0.2s; border: 2px solid transparent; 
+        }
+        .avatar-opt.selected { border-color: var(--gold); background: rgba(255,215,0,0.2); transform: scale(1.15); }
 
-*{box-sizing:border-box;font-family:Montserrat}
+        /* BARRA DE STATUS SUPERIOR */
+        #players-bar { 
+            display: flex; gap: 8px; width: 100%; padding: 12px; overflow-x: auto; 
+            scrollbar-width: none; background: rgba(0,0,0,0.4); 
+        }
+        .p-badge { 
+            min-width: 100px; padding: 8px; background: rgba(255,255,255,0.07); 
+            border-radius: 15px; text-align: center; border: 2px solid transparent; transition: 0.3s;
+        }
+        .p-badge.active { border-color: var(--gold); background: rgba(255, 215, 0, 0.1); transform: translateY(-3px); }
+        .p-badge .money { color: #2ecc71; font-weight: 900; font-size: 13px; }
 
-body{
-margin:0;
-background:radial-gradient(circle,#1a1a2e,#0f0f0f);
-color:white;
-display:flex;
-flex-direction:column;
-align-items:center;
-}
+        /* TABULEIRO 3D */
+        .board-container { position: relative; width: 92vw; height: 92vw; max-width: 450px; max-height: 450px; margin-top: 10px; }
+        #board { 
+            display: grid; width: 100%; height: 100%; 
+            grid-template-columns: 1.3fr repeat(9, 1fr) 1.3fr; 
+            grid-template-rows: 1.3fr repeat(9, 1fr) 1.3fr; 
+            background: var(--board-green); border: 4px solid #1a1a1a;
+            border-radius: 12px; box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+            transform: perspective(1000px) rotateX(15deg);
+        }
+        .tile { border: 0.2px solid rgba(0,0,0,0.12); position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        .tile-color { height: 25%; width: 100%; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .tile-name { flex: 1; font-size: 4.5px; text-transform: uppercase; font-weight: 900; display: flex; align-items: center; justify-content: center; text-align: center; color: #333; line-height: 1; }
+        
+        /* PEÕES */
+        .pawn { 
+            position: absolute; font-size: 22px; z-index: 100; pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.4));
+        }
 
-/* SETUP */
-#setup{
-padding:15px;
-text-align:center;
-}
-select,input{
-padding:8px;
-border-radius:8px;
-border:none;
-margin:5px;
-}
+        /* CONTROLES */
+        .controls { display: flex; align-items: center; gap: 20px; margin-top: 25px; }
+        .btn-roll { 
+            width: 85px; height: 85px; border-radius: 50%; border: 6px solid white;
+            background: linear-gradient(135deg, #00f2fe, #4facfe); color: white;
+            font-size: 20px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 0 #007bb0;
+            transition: 0.1s;
+        }
+        .btn-roll:active { transform: translateY(4px); box-shadow: 0 2px 0 #007bb0; }
+        .btn-roll:disabled { filter: grayscale(1); opacity: 0.7; }
 
-/* PLAYERS */
-.players{
-display:flex;
-flex-wrap:wrap;
-gap:6px;
-justify-content:center;
-}
-.player{
-background:var(--glass);
-padding:6px;
-border-radius:10px;
-font-size:11px;
-text-align:center;
-}
-.player.active{
-border:2px solid var(--gold);
-box-shadow:0 0 10px gold;
-}
+        .dice-ui { display: flex; gap: 10px; background: white; padding: 12px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .die { font-size: 32px; color: #222; min-width: 35px; text-align: center; }
 
-/* BOARD 3D */
-.board{
-width:95vw;
-height:95vw;
-max-width:420px;
-max-height:420px;
-display:grid;
-grid-template-columns:repeat(10,1fr);
-grid-template-rows:repeat(10,1fr);
-background:#cde6d0;
-border-radius:15px;
-overflow:hidden;
-transform:perspective(800px) rotateX(8deg);
-box-shadow:0 30px 50px rgba(0,0,0,.6);
-}
+        /* MODAIS PROFISSIONAIS */
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 3000; backdrop-filter: blur(8px); }
+        .modal { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            background: white; color: #222; padding: 25px; border-radius: 25px; 
+            width: 85%; max-width: 340px; text-align: center; display: none; z-index: 3001; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+        }
+        .m-btn { 
+            padding: 12px 25px; border-radius: 50px; border: none; font-weight: 900; 
+            margin: 5px; cursor: pointer; color: white; transition: 0.2s;
+        }
 
-.tile{
-border:1px solid rgba(0,0,0,.1);
-font-size:6px;
-display:flex;
-align-items:center;
-justify-content:center;
-position:relative;
-background:linear-gradient(145deg,#dff5e1,#b9d6bb);
-}
-
-.owner{
-position:absolute;
-bottom:0;
-height:4px;
-width:100%;
-}
-
-/* PAWN */
-.pawn{
-position:absolute;
-font-size:16px;
-transition:.3s;
-filter:drop-shadow(0 2px 3px black);
-}
-
-/* BUTTON */
-button{
-margin:5px;
-padding:10px;
-border:none;
-border-radius:20px;
-background:linear-gradient(135deg,#00f2fe,#4facfe);
-color:white;
-font-weight:bold;
-}
-
-/* MODAL */
-#modal{
-position:fixed;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-background:white;
-color:black;
-padding:15px;
-border-radius:15px;
-display:none;
-z-index:10;
-}
-</style>
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(10deg); } 75% { transform: rotate(-10deg); } }
+    </style>
 </head>
-
 <body>
 
-<div id="setup">
-<h2>Configurar Jogo</h2>
-
-<select id="qtd" onchange="criarInputs()">
-<option value="2">2 Jogadores</option>
-<option value="3">3 Jogadores</option>
-<option value="4">4 Jogadores</option>
-<option value="5">5 Jogadores</option>
-<option value="6">6 Jogadores</option>
-<option value="7">7 Jogadores</option>
-<option value="8">8 Jogadores</option>
-<option value="9">9 Jogadores</option>
-<option value="10">10 Jogadores</option>
-</select>
-
-<div id="inputs"></div>
-
-<button onclick="startGame()">Iniciar</button>
+<div id="setup-screen">
+    <div class="setup-header">
+        <h1>MONOPOLY ULTRA</h1>
+        <p style="opacity:0.7">Personalize sua partida</p>
+        <div style="margin: 15px 0;">
+            <label>JOGADORES:</label>
+            <select id="total-players" onchange="renderSetup()" style="padding:8px; border-radius:8px;">
+                <option value="2">2 Jogadores</option>
+                <option value="4">4 Jogadores</option>
+                <option value="6">6 Jogadores</option>
+                <option value="8">8 Jogadores</option>
+                <option value="10" selected>10 Jogadores</option>
+            </select>
+        </div>
+    </div>
+    <div class="setup-grid" id="setup-grid"></div>
+    <button class="m-btn" style="background:var(--gold); color:black; width:280px; font-size:18px; margin-top:30px; box-shadow: 0 5px 15px rgba(255,215,0,0.3);" onclick="startGame()">COMEÇAR JOGO</button>
 </div>
 
-<div class="players" id="players"></div>
-<div class="board" id="board"></div>
+<div id="players-bar"></div>
 
-<div id="dice">🎲</div>
-<button onclick="rollDice()">Jogar</button>
-<button onclick="bank()">Banco</button>
+<div class="board-container">
+    <div id="board">
+        <div style="grid-column: 4/9; grid-row: 5/8; display: flex; justify-content: center; align-items: center; z-index: 10;">
+            <div class="dice-ui" id="dice-ui">
+                <div class="die" id="d1">⚀</div>
+                <div class="die" id="d2">⚀</div>
+            </div>
+        </div>
+    </div>
+    <div id="pawns-layer"></div>
+</div>
 
-<div id="modal"></div>
+<div class="controls">
+    <button class="m-btn" style="background:#2ecc71" onclick="openBank()">EMPRÉSTIMO</button>
+    <button class="btn-roll" id="roll-btn" onclick="roll()">GO!</button>
+</div>
+
+<div id="overlay"></div>
+<div class="modal" id="game-modal">
+    <h2 id="m-title" style="margin:0 0 10px 0; color:var(--primary)">Ação</h2>
+    <p id="m-body" style="margin-bottom:20px; font-weight:500"></p>
+    <div id="m-footer"></div>
+</div>
 
 <script>
-const icons=["🦆","🚗","🐱","🚀","🍕","👻","🎩","⚽","🍦","💎"];
+    const TILES = [
+        {n: "PARTIDA", c: null, p: 0}, {n: "Sumaré", c: "#955436", p: 60}, {n: "Cofre", c: null, p: 0},
+        {n: "Praça da Sé", c: "#955436", p: 60}, {n: "Imposto", c: null, p: 0}, {n: "Maracanã", c: "#333", p: 200},
+        {n: "25 de Março", c: "#87CEEB", p: 100}, {n: "Sorte", c: null, p: 0}, {n: "São João", c: "#87CEEB", p: 100},
+        {n: "Paulista", c: "#87CEEB", p: 120}, {n: "Prisão", c: null, p: 0}, {n: "Vieira Souto", c: "#D93A96", p: 140},
+        {n: "Cia Luz", c: "#ffce00", p: 150}, {n: "Niterói", c: "#D93A96", p: 140}, {n: "Atlântica", c: "#D93A96", p: 160},
+        {n: "Carioca", c: "#333", p: 200}, {n: "Av. JK", c: "#F7941D", p: 180}, {n: "Cofre", c: null, p: 0},
+        {n: "Berrini", c: "#F7941D", p: 180}, {n: "Faria Lima", c: "#F7941D", p: 200}, {n: "Parada", c: null, p: 0},
+        {n: "Ipanema", c: "#ED1C24", p: 220}, {n: "Sorte", c: null, p: 0}, {n: "Leblon", c: "#ED1C24", p: 220},
+        {n: "Copacabana", c: "#ED1C24", p: 240}, {n: "Consolação", c: "#333", p: 200}, {n: "Cid. Jardim", c: "#FFF200", p: 260},
+        {n: "Pacaembu", c: "#FFF200", p: 260}, {n: "Cia Água", c: "#ffce00", p: 150}, {n: "Ibirapuera", c: "#FFF200", p: 280},
+        {n: "Vá Preso", c: null, p: 0}, {n: "Barra", c: "#1FB25A", p: 300}, {n: "J. Botânico", c: "#1FB25A", p: 300},
+        {n: "Cofre", c: null, p: 0}, {n: "Lagoa", c: "#1FB25A", p: 320}, {n: "República", c: "#333", p: 200},
+        {n: "Sorte", c: null, p: 0}, {n: "Morumbi", c: "#006AB3", p: 350}, {n: "Riqueza", c: null, p: 0}, {n: "Oscar Freire", c: "#006AB3", p: 400}
+    ];
 
-let players=[];
-let turn=0;
+    const ICONS = ["🚗", "🚀", "🎩", "🦖", "🚢", "🐕", "🍕", "💎", "🐱", "🦆", "⚽", "🍦"];
+    let players = [];
+    let turn = 0;
 
-/* CRIAR INPUTS */
-function criarInputs(){
-inputs.innerHTML="";
-let qtd=parseInt(qtdSelect.value||qtd.value);
-for(let i=0;i<qtd;i++){
-inputs.innerHTML+=`
-<div>
-<input placeholder="Nome jogador ${i+1}" id="nome${i}">
-<select id="icon${i}">
-${icons.map(i=>`<option>${i}</option>`).join("")}
-</select>
-</div>`;
-}
-}
-criarInputs();
+    function renderSetup() {
+        const grid = document.getElementById('setup-grid');
+        const count = document.getElementById('total-players').value;
+        grid.innerHTML = "";
+        players = [];
+        for(let i=0; i<count; i++) {
+            const defName = i===0?'K':i===1?'J':`Jogador ${i+1}`;
+            players.push({ id: i, name: defName, icon: ICONS[i], money: 1500, pos: 0 });
+            grid.innerHTML += `
+                <div class="config-card">
+                    <h3 style="margin-top:0; font-size:12px; color:var(--p${i})">PLAYER ${i+1}</h3>
+                    <input class="name-input" id="name-${i}" value="${defName}">
+                    <div class="avatar-list" id="avatars-${i}">
+                        ${ICONS.map(ic => `<span class="avatar-opt ${ic===players[i].icon?'selected':''}" onclick="setAvatar(${i}, '${ic}')">${ic}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+    }
 
-/* START */
-function startGame(){
-let qtd=parseInt(document.getElementById("qtd").value);
+    function setAvatar(pIdx, icon) {
+        players[pIdx].icon = icon;
+        document.querySelectorAll(`#avatars-${pIdx} .avatar-opt`).forEach(el => {
+            el.classList.toggle('selected', el.innerText === icon);
+        });
+    }
 
-players=[];
-for(let i=0;i<qtd;i++){
-players.push({
-id:i,
-name:document.getElementById("nome"+i).value||("P"+(i+1)),
-icon:document.getElementById("icon"+i).value,
-money:1500,
-pos:0,
-inJail:false,
-jail:0
-});
-}
+    function startGame() {
+        players.forEach((p, i) => p.name = document.getElementById(`name-${i}`).value);
+        document.getElementById('setup-screen').style.display = 'none';
+        initBoard();
+        updateUI();
+    }
 
-setup.style.display="none";
+    function initBoard() {
+        const b = document.getElementById('board');
+        TILES.forEach((t, i) => {
+            const div = document.createElement('div');
+            div.className = 'tile'; div.id = `tile-${i}`;
+            if(i <= 10) { div.style.gridRow = "11"; div.style.gridColumn = 11 - i; }
+            else if(i <= 20) { div.style.gridColumn = "1"; div.style.gridRow = 21 - i; }
+            else if(i <= 30) { div.style.gridRow = "1"; div.style.gridColumn = i - 19; }
+            else { div.style.gridColumn = "11"; div.style.gridRow = i - 29; }
+            div.innerHTML = `${t.c ? `<div class="tile-color" style="background:${t.c}"></div>` : ''}
+                             <div class="tile-name">${t.n}</div>
+                             <div id="owner-${i}" style="height:5px"></div>`;
+            b.appendChild(div);
+        });
+        players.forEach(p => {
+            const pawn = document.createElement('div');
+            pawn.className = 'pawn'; pawn.id = `pawn-${p.id}`; pawn.innerText = p.icon;
+            document.getElementById('pawns-layer').appendChild(pawn);
+        });
+    }
 
-/* CRIA TABULEIRO */
-for(let i=0;i<100;i++){
-const t=document.createElement("div");
-t.className="tile";
-t.id="t"+i;
-board.appendChild(t);
-}
+    async function roll() {
+        document.getElementById('roll-btn').disabled = true;
+        let d1 = Math.ceil(Math.random() * 6);
+        let d2 = Math.ceil(Math.random() * 6);
+        document.getElementById('dice-ui').classList.add('shake');
+        setTimeout(async () => {
+            document.getElementById('d1').innerText = ['⚀','⚁','⚂','⚃','⚄','⚅'][d1-1];
+            document.getElementById('d2').innerText = ['⚀','⚁','⚂','⚃','⚄','⚅'][d2-1];
+            document.getElementById('dice-ui').classList.remove('shake');
+            await move(d1 + d2);
+        }, 500);
+    }
 
-/* PEÕES */
-players.forEach(p=>{
-const pawn=document.createElement("div");
-pawn.className="pawn";
-pawn.id="p"+p.id;
-pawn.innerText=p.icon;
-document.body.appendChild(pawn);
-});
+    async function move(steps) {
+        const p = players[turn];
+        for(let i=0; i<steps; i++) {
+            p.pos = (p.pos + 1) % 40;
+            if(p.pos === 0) p.money += 200;
+            updatePawns();
+            await new Promise(r => setTimeout(r, 220));
+        }
+        checkTile();
+    }
 
-render();
-update();
-}
+    function checkTile() {
+        const p = players[turn];
+        const t = TILES[p.pos];
+        if(t.p > 0) {
+            if(!t.owner) {
+                showModal(t.n, `Propriedade disponível por $${t.p}. Deseja comprar?`, [
+                    {t: "COMPRAR", c: "#2ecc71", f: () => {
+                        if(p.money >= t.p) {
+                            p.money -= t.p; t.owner = p;
+                            document.getElementById(`owner-${p.pos}`).style.background = `var(--p${p.id})`;
+                            nextTurn();
+                        } else { alert("Saldo insuficiente!"); }
+                    }},
+                    {t: "PASSAR", c: "#999", f: nextTurn}
+                ]);
+            } else if(t.owner !== p) {
+                const rent = Math.floor(t.p * 0.2);
+                p.money -= rent; t.owner.money += rent;
+                showModal("ALUGUEL", `Você pagou $${rent} para ${t.owner.name}`, [{t: "PAGAR", c: "#e91e63", f: nextTurn}]);
+            } else nextTurn();
+        } else {
+            if(p.pos === 30) { p.pos = 10; updatePawns(); showModal("PRESO!", "Vá direto para a cadeia.", [{t: "DROGA...", c: "#333", f: nextTurn}]); }
+            else nextTurn();
+        }
+    }
 
-/* RENDER */
-function render(){
-playersDiv.innerHTML="";
-players.forEach(p=>{
-playersDiv.innerHTML+=`
-<div class="player ${turn===p.id?"active":""}">
-${p.icon}<br>${p.name}<br>💰${p.money}
-</div>`;
-});
-}
+    function openBank() {
+        const p = players[turn];
+        p.money += 500;
+        showModal("BANCO", "Empréstimo de $500 concedido!", [{t: "FECHAR", c: "#2ecc71", f: closeModal}]);
+        updateUI();
+    }
 
-/* DADO */
-async function rollDice(){
-let p=players[turn];
+    function updateUI() {
+        const bar = document.getElementById('players-bar');
+        bar.innerHTML = "";
+        players.forEach(p => {
+            bar.innerHTML += `<div class="p-badge ${turn===p.id?'active':''}">
+                <div style="font-size:20px">${p.icon}</div>
+                <div style="font-size:11px"><b>${p.name}</b></div>
+                <div class="money">$${p.money}</div>
+            </div>`;
+        });
+        updatePawns();
+    }
 
-if(p.inJail){
-p.jail++;
-if(p.jail>=3){
-p.inJail=false;
-show("Saiu da prisão");
-}else{
-show("Preso!");
-next();
-return;
-}
-}
+    function updatePawns() {
+        players.forEach(p => {
+            const tile = document.getElementById(`tile-${p.pos}`);
+            const pawn = document.getElementById(`pawn-${p.id}`);
+            pawn.style.top = (tile.offsetTop + 5 + (p.id*2)) + "px";
+            pawn.style.left = (tile.offsetLeft + 5 + (p.id*2)) + "px";
+        });
+    }
 
-let d1=Math.ceil(Math.random()*6);
-let d2=Math.ceil(Math.random()*6);
+    function showModal(t, b, btns) {
+        document.getElementById('m-title').innerText = t;
+        document.getElementById('m-body').innerText = b;
+        const f = document.getElementById('m-footer'); f.innerHTML = "";
+        btns.forEach(btn => {
+            const bEl = document.createElement('button');
+            bEl.className = "m-btn"; bEl.innerText = btn.t; bEl.style.background = btn.c;
+            bEl.onclick = btn.f; f.appendChild(bEl);
+        });
+        document.getElementById('overlay').style.display = "block";
+        document.getElementById('game-modal').style.display = "block";
+    }
 
-dice.innerText=d1+"+"+d2;
+    function closeModal() {
+        document.getElementById('overlay').style.display = "none";
+        document.getElementById('game-modal').style.display = "none";
+    }
 
-await move(d1+d2);
+    function nextTurn() {
+        closeModal();
+        turn = (turn + 1) % players.length;
+        document.getElementById('roll-btn').disabled = false;
+        updateUI();
+    }
 
-if(d1===d2){
-show("Duplo! joga de novo");
-}else next();
-}
-
-/* MOVE */
-async function move(s){
-let p=players[turn];
-
-for(let i=0;i<s;i++){
-p.pos=(p.pos+1)%100;
-update();
-await new Promise(r=>setTimeout(r,120));
-}
-
-if(p.pos===30){
-p.pos=10;
-p.inJail=true;
-show("Foi preso!");
-}
-}
-
-/* BANCO */
-function bank(){
-let p=players[turn];
-p.money+=500;
-p.debt=(p.debt||0)+600;
-show("Pegou empréstimo +500");
-render();
-}
-
-/* UPDATE */
-function update(){
-players.forEach(p=>{
-let tile=document.getElementById("t"+p.pos);
-let pawn=document.getElementById("p"+p.id);
-pawn.style.top=(tile.offsetTop+p.id*2)+"px";
-pawn.style.left=(tile.offsetLeft+p.id*2)+"px";
-});
-render();
-}
-
-/* TURN */
-function next(){
-turn=(turn+1)%players.length;
-render();
-}
-
-/* MODAL */
-function show(t){
-modal.innerText=t;
-modal.style.display="block";
-setTimeout(()=>modal.style.display="none",1200);
-}
+    renderSetup();
 </script>
-
 </body>
 </html>
