@@ -1,245 +1,380 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monopoly Brasil ULTRA PRO</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monopoly Brasil - Ultimate Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #00eb84; --danger: #ff4757; --bg: #0b0e14; --card: #1c222d; --text: #ffffff; --sub: #94a3b8;
+            --accent: #f1c40f; --gold: linear-gradient(45deg, #f1c40f, #f39c12);
+            --luck: #e67e22; --chest: #3498db; --debt: #e74c3c;
+        }
+        
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding: 10px; min-height: 100vh; overflow-x: hidden; }
 
-<style>
-:root{
- --bg:#0b0e14;
- --card:#1c222d;
- --primary:#00eb84;
- --text:#fff;
-}
+        /* --- SETUP SCREEN --- */
+        #setup-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; transition: 0.5s; }
+        .setup-container { width: 100%; max-width: 400px; background: var(--card); padding: 30px; border-radius: 28px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.4); text-align: center; }
+        .input-name { background: rgba(0,0,0,0.3); border: 1px solid #333; color: white; padding: 12px; border-radius: 12px; margin-bottom: 10px; width: 100%; font-size: 1rem; transition: 0.3s; }
+        .input-name:focus { border-color: var(--primary); background: rgba(0,235,132,0.05); }
 
-body{margin:0;font-family:Arial;background:var(--bg);color:var(--text)}
+        /* --- BOARD ENGINE --- */
+        .game-wrapper { display: flex; flex-direction: column; align-items: center; gap: 20px; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.8s ease; }
+        
+        #board {
+            width: 360px; height: 360px; 
+            display: grid; grid-template-columns: repeat(11, 1fr); grid-template-rows: repeat(11, 1fr);
+            border: 4px solid #222; background: #151921; position: relative; border-radius: 8px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
 
-#board{
-width:420px;height:420px;margin:10px auto;
-display:grid;grid-template-columns:repeat(11,1fr);
-grid-template-rows:repeat(11,1fr);
-border:4px solid #333;
-}
+        .tile { 
+            border: 0.2px solid rgba(255,255,255,0.05); font-size: 5px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            position: relative; text-align: center; font-weight: 800; overflow: hidden;
+        }
 
-.tile{border:1px solid #222;font-size:7px;display:flex;align-items:center;justify-content:center;position:relative}
+        /* Color Bars for Tiles */
+        .c-brown { border-top: 5px solid #955436; } .c-lblue { border-top: 5px solid #aae0fa; }
+        .c-pink { border-left: 5px solid #d93a96; } .c-orange { border-left: 5px solid #f7941d; }
+        .c-red { border-bottom: 5px solid #ed1c24; } .c-yellow { border-bottom: 5px solid #fef200; }
+        .c-green { border-right: 5px solid #19a05e; } .c-dblue { border-right: 5px solid #0068a7; }
+        .c-station { background: rgba(255,255,255,0.05); }
 
-.player{width:10px;height:10px;border-radius:50%;position:absolute;bottom:2px}
-.house{position:absolute;top:2px;left:2px;font-size:10px}
-.hotel{position:absolute;top:2px;right:2px;font-size:12px}
+        .pawn { 
+            width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; 
+            position: absolute; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
 
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;padding:10px}
+        .house-marker { position: absolute; top: 1px; left: 1px; font-size: 8px; }
+        .hotel-marker { position: absolute; top: 1px; right: 1px; font-size: 10px; }
 
-.card{background:var(--card);padding:10px;border-radius:15px}
+        /* --- UI COMPONENTS --- */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; width: 100%; padding-bottom: 50px; }
+        .player-card { 
+            background: var(--card); border-radius: 24px; padding: 18px; border: 1px solid rgba(255,255,255,0.08); 
+            position: relative; transition: 0.3s; 
+        }
+        .player-card.active { border: 2px solid var(--primary); transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,235,132,0.1); }
 
-button{padding:8px;border:none;border-radius:8px;background:var(--primary);cursor:pointer;margin:3px}
+        .balance-display { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 18px; text-align: center; margin: 10px 0; }
+        .balance-amt { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
+        
+        .btn-roll { 
+            background: var(--gold); color: #000; border: none; padding: 18px 40px; border-radius: 50px; 
+            font-weight: 900; font-size: 1.2rem; cursor: pointer; transition: 0.3s; 
+            box-shadow: 0 10px 0 #b7950b; margin: 10px 0;
+        }
+        .btn-roll:active { transform: translateY(5px); box-shadow: 0 5px 0 #b7950b; }
+        .btn-roll:disabled { opacity: 0.5; cursor: not-allowed; }
 
-#modal{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center}
-#modal-content{background:#111;padding:20px;border-radius:15px}
+        .action-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 10px; font-size: 0.7rem; cursor: pointer; font-weight: 600; }
+        .action-btn:hover { background: rgba(255,255,255,0.1); }
 
-</style>
+        .history-list { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px; margin-top: 10px; height: 80px; overflow-y: auto; font-size: 0.7rem; color: var(--sub); }
+
+        /* --- MODALS --- */
+        #modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(10px); }
+        .modal-content { background: var(--card); width: 90%; max-width: 380px; padding: 30px; border-radius: 30px; text-align: center; border: 1px solid rgba(255,255,255,0.1); animation: pop 0.3s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes diceShake { 0% { transform: rotate(0); } 25% { transform: rotate(10deg); } 75% { transform: rotate(-10deg); } 100% { transform: rotate(0); } }
+        .rolling { animation: diceShake 0.1s infinite; }
+
+    </style>
 </head>
-
 <body>
 
-<div id="setup">
-<h2>MONOPOLY ULTRA</h2>
-<input id="money" type="number" value="1500"><br>
-<input id="name0" placeholder="Jogador 1"><br>
-<input id="name1" placeholder="Jogador 2"><br>
-<button onclick="start()">COMEÇAR</button>
-</div>
+    <div id="setup-screen">
+        <div class="setup-container">
+            <h1 style="background: var(--gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.8rem; margin: 0;">MONOPOLY</h1>
+            <p style="color: var(--sub); margin-bottom: 25px;">EDIÇÃO DIGITAL BRASIL</p>
+            <input type="number" id="cfg-money" class="input-name" value="1500" placeholder="Saldo Inicial">
+            <div id="name-inputs">
+                <input type="text" class="input-name" placeholder="Jogador 1" id="name-0" value="Jogador 1">
+                <input type="text" class="input-name" placeholder="Jogador 2" id="name-1" value="Jogador 2">
+            </div>
+            <button class="action-btn" style="width:100%; margin-bottom: 15px; padding: 12px;" onclick="addField()">+ ADICIONAR JOGADOR</button>
+            <button class="btn-roll" style="width:100%; font-size: 1rem; padding: 15px;" onclick="iniciarJogo()">COMEÇAR PARTIDA</button>
+        </div>
+    </div>
 
-<div id="game" style="display:none">
-<div id="board"></div>
-<div class="grid" id="players"></div>
-</div>
+    <div id="game-ui" style="display:none" class="game-wrapper">
+        <div id="board"></div>
+        
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <button id="main-dice-btn" class="btn-roll" onclick="executarTurno()">🎲 LANÇAR DADOS</button>
+            <div id="turn-indicator" style="font-weight: 800; color: var(--primary); letter-spacing: 1px;">VEZ DE: JOGADOR 1</div>
+        </div>
 
-<div id="modal"><div id="modal-content"></div></div>
+        <div id="players-grid" class="grid"></div>
+    </div>
 
-<script>
+    <div id="modal">
+        <div class="modal-content" id="modal-content"></div>
+    </div>
 
-// ===== TABULEIRO =====
-const casas=[
-"GO","Sumaré","Sorte","Sé","Taxa","Estação","25 Março","Sorte","São João","Paulista",
-"Prisao","Vieira Souto","Água","Niterói","Atlântica","Estação","JK","Sorte","Berrini","Faria Lima",
-"Free","Ipanema","Sorte","Leblon","Copacabana","Estação","Cidade Jardim","Pacaembu","Luz","Ibirapuera",
-"Vá Prisão","Barra","Botânico","Sorte","Lagoa","Estação","Sorte","Morumbi","Taxa","Oscar Freire"
-];
+    <script>
+        // --- DATA & CONFIG ---
+        const CORES_P = ['#FF4757', '#2ED573', '#1E90FF', '#FFA502', '#70A1FF', '#A29BFE'];
+        const cartasSorte = [
+            {t: "Receba dividendos da Petrobras: + M$ 50", v: 50}, {t: "Multa do DETRAN: - M$ 50", v: -50},
+            {t: "Restituição do Imposto de Renda: + M$ 100", v: 100}, {t: "Mensalidade da Faculdade: - M$ 150", v: -150},
+            {t: "Lucro em Criptomoedas: + M$ 200", v: 200}, {t: "Reforma no Apartamento: - M$ 100", v: -100},
+            {t: "Prêmio da Mega-Sena: + M$ 500", v: 500}, {t: "Jantar de Luxo em SP: - M$ 80", v: -80}
+        ];
 
-let tiles=casas.map(()=>({owner:null,houses:0,hotel:false}));
+        const TABULEIRO_DATA = [
+            {n:"INÍCIO", p:0, c:""}, {n:"Sumaré", p:60, c:"c-brown"}, {n:"SORTE", p:0, c:""}, {n:"Sé", p:60, c:"c-brown"}, {n:"IMPOSTO", p:200, c:""}, {n:"M. Maracanã", p:200, c:"c-station"}, {n:"25 Março", p:100, c:"c-lblue"}, {n:"SORTE", p:0, c:""}, {n:"São João", p:100, c:"c-lblue"}, {n:"Paulista", p:120, c:"c-lblue"},
+            {n:"PRISÃO", p:0, c:""}, {n:"Vieira Souto", p:140, c:"c-pink"}, {n:"LUZ", p:150, c:""}, {n:"Niterói", p:160, c:"c-pink"}, {n:"Atlântica", p:160, c:"c-pink"}, {n:"M. Carioca", p:200, c:"c-station"}, {n:"J.K.", p:180, c:"c-orange"}, {n:"SORTE", p:0, c:""}, {n:"Berrini", p:180, c:"c-orange"}, {n:"Faria Lima", p:200, c:"c-orange"},
+            {n:"PARADA", p:0, c:""}, {n:"Ipanema", p:220, c:"c-red"}, {n:"SORTE", p:0, c:""}, {n:"Leblon", p:220, c:"c-red"}, {n:"Copacabana", p:240, c:"c-red"}, {n:"M. Consolação", p:200, c:"c-station"}, {n:"C. Jardim", p:260, c:"c-yellow"}, {n:"Pacaembu", p:260, c:"c-yellow"}, {n:"ÁGUA", p:150, c:""}, {n:"Ibirapuera", p:280, c:"c-yellow"},
+            {n:"VÁ PRISÃO", p:0, c:""}, {n:"Barra", p:300, c:"c-green"}, {n:"J. Botânico", p:300, c:"c-green"}, {n:"SORTE", p:0, c:""}, {n:"Lagoa", p:320, c:"c-green"}, {n:"M. Repúb.", p:200, c:"c-station"}, {n:"SORTE", p:0, c:""}, {n:"Morumbi", p:350, c:"c-dblue"}, {n:"TAXA LUXO", p:100, c:""}, {n:"Oscar Freire", p:400, c:"c-dblue"}
+        ];
 
-let jogadores=[];
-let turno=0;
+        let jogo = {
+            jogadores: [],
+            tiles: TABULEIRO_DATA.map(() => ({ owner: null, houses: 0, hotel: false })),
+            turno: 0,
+            fields: 2
+        };
 
-// ===== BOARD =====
-function criarBoard(){
-let board=document.getElementById("board");
-board.innerHTML="";
-let grid=Array(121).fill(null);
+        // --- ENGINE ---
+        function criarTabuleiro() {
+            const board = document.getElementById("board");
+            board.innerHTML = "";
+            let grid = Array(121).fill(null);
+            
+            // Mapeamento das posições Monopoly para Grid 11x11
+            for(let i=0; i<=10; i++) grid[110-i] = i; // Bottom
+            for(let i=1; i<=10; i++) grid[110-(i*11)] = 10+i; // Left
+            for(let i=1; i<=10; i++) grid[i] = 20+i; // Top
+            for(let i=1; i<=9; i++) grid[(i*11)+10] = 30+i; // Right
 
-for(let i=0;i<11;i++) grid[110+i]=i;
-for(let i=0;i<11;i++) grid[110-(i*11)]=10+i;
-for(let i=0;i<11;i++) grid[i]=20+i;
-for(let i=0;i<11;i++) grid[(i*11)+10]=30+i;
+            grid.forEach((pos, idx) => {
+                let d = document.createElement("div");
+                d.className = "tile";
+                if(pos !== null) {
+                    d.id = `tile-${pos}`;
+                    d.innerHTML = `<span style="transform: scale(0.8)">${TABULEIRO_DATA[pos].n}</span>`;
+                    if(TABULEIRO_DATA[pos].c) d.classList.add(TABULEIRO_DATA[pos].c);
+                }
+                board.appendChild(d);
+            });
+        }
 
-grid.forEach(pos=>{
-let d=document.createElement("div");
-d.className="tile";
-if(pos!==null){
-d.id="tile-"+pos;
-d.innerText=casas[pos];
-}
-board.appendChild(d);
-});
-}
+        function iniciarJogo() {
+            const grana = parseInt(document.getElementById('cfg-money').value) || 1500;
+            jogo.jogadores = [];
+            for(let i=0; i<jogo.fields; i++) {
+                const n = document.getElementById(`name-${i}`).value || `J${i+1}`;
+                jogo.jogadores.push({
+                    id: i, nome: n, saldo: grana, pos: 0, cor: CORES_P[i],
+                    historico: ["Entrou no jogo"], preso: false
+                });
+            }
+            document.getElementById('setup-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('setup-screen').style.display = 'none';
+                document.getElementById('game-ui').style.display = 'flex';
+                criarTabuleiro();
+                renderizar();
+            }, 500);
+        }
 
-// ===== INIT =====
-function start(){
-jogadores=[
-{nome:document.getElementById("name0").value||"P1",saldo:1500,pos:0,cor:"red",jail:false,jailTurn:0,imoveis:[]},
-{nome:document.getElementById("name1").value||"P2",saldo:1500,pos:0,cor:"cyan",jail:false,jailTurn:0,imoveis:[]}
-];
+        function renderizar() {
+            // Limpar elementos móveis
+            document.querySelectorAll(".pawn, .house-marker, .hotel-marker").forEach(e => e.remove());
 
-document.getElementById("setup").style.display="none";
-document.getElementById("game").style.display="block";
+            // Renderizar Jogadores
+            jogo.jogadores.forEach(j => {
+                let p = document.createElement("div");
+                p.className = "pawn";
+                p.style.background = j.cor;
+                p.id = `pawn-${j.id}`;
+                
+                let tile = document.getElementById(`tile-${j.pos}`);
+                tile.appendChild(p);
+                
+                // Ajuste de posição para múltiplos peões no mesmo tile
+                let offset = j.id * 3;
+                p.style.transform = `translate(${offset}px, ${offset}px)`;
+            });
 
-criarBoard();
-render();
-}
+            // Renderizar Imóveis
+            jogo.tiles.forEach((t, i) => {
+                if(t.owner !== null) {
+                    let tileEl = document.getElementById(`tile-${i}`);
+                    tileEl.style.backgroundColor = `${jogo.jogadores[t.owner].cor}22`;
+                    if(t.hotel) {
+                        tileEl.innerHTML += `<span class="hotel-marker">🏨</span>`;
+                    } else if(t.houses > 0) {
+                        tileEl.innerHTML += `<span class="house-marker">🏠${t.houses}</span>`;
+                    }
+                }
+            });
 
-// ===== RENDER =====
-function render(){
+            // UI Cards
+            const grid = document.getElementById('players-grid');
+            grid.innerHTML = jogo.jogadores.map((j, i) => `
+                <div class="player-card ${jogo.turno === i ? 'active' : ''}">
+                    <div style="display:flex; justify-content:space-between; align-items:center">
+                        <b style="color:${j.cor}">${j.nome.toUpperCase()}</b>
+                        ${j.preso ? '⛓️ PRESO' : ''}
+                    </div>
+                    <div class="balance-display">
+                        <div class="balance-amt">M$ ${j.saldo.toLocaleString()}</div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px">
+                        <button class="action-btn" onclick="pagarManual(${i})">PAGAR</button>
+                        <button class="action-btn" onclick="construir(${i})">CONSTRUIR</button>
+                    </div>
+                    <div class="history-list">
+                        ${j.historico.map(h => `<div>• ${h}</div>`).join('')}
+                    </div>
+                </div>
+            `).join('');
 
-document.querySelectorAll(".player,.house,.hotel").forEach(e=>e.remove());
+            document.getElementById('turn-indicator').innerText = `VEZ DE: ${jogo.jogadores[jogo.turno].nome.toUpperCase()}`;
+            document.getElementById('turn-indicator').style.color = jogo.jogadores[jogo.turno].cor;
+        }
 
-jogadores.forEach(j=>{
-let el=document.createElement("div");
-el.className="player";
-el.style.background=j.cor;
-document.getElementById("tile-"+j.pos)?.appendChild(el);
-});
+        // --- TURNO ENGINE ---
+        async function executarTurno() {
+            const btn = document.getElementById('main-dice-btn');
+            btn.disabled = true;
+            
+            let j = jogo.jogadores[jogo.turno];
+            let d1 = Math.floor(Math.random()*6)+1;
+            let d2 = Math.floor(Math.random()*6)+1;
+            let total = d1 + d2;
 
-tiles.forEach((t,i)=>{
-let tile=document.getElementById("tile-"+i);
-if(!tile) return;
+            abrirModal(`
+                <h1 class="rolling">🎲🎲</h1>
+                <p>${j.nome} está lançando os dados...</p>
+                <div style="font-size: 3rem; font-weight: 800; color: var(--primary);">${total}</div>
+            `);
 
-if(t.hotel){
-let h=document.createElement("div");
-h.className="hotel";
-h.innerText="🏨";
-tile.appendChild(h);
-}else if(t.houses>0){
-let h=document.createElement("div");
-h.className="house";
-h.innerText="🏠"+t.houses;
-tile.appendChild(h);
-}
-});
+            await new Promise(r => setTimeout(r, 1200));
 
-renderPlayers();
-}
+            if(j.preso) {
+                if(d1 === d2) {
+                    j.preso = false;
+                    j.historico.unshift("Tirou duplos e saiu da prisão!");
+                } else {
+                    j.historico.unshift("Continua preso...");
+                }
+            } else {
+                // Animação de caminhada
+                for(let step = 1; step <= total; step++) {
+                    j.pos = (j.pos + 1) % 40;
+                    if(j.pos === 0) {
+                        j.saldo += 200;
+                        j.historico.unshift("Passou pelo Início (+200)");
+                    }
+                    renderizar();
+                    await new Promise(r => setTimeout(r, 150));
+                }
+                processarPouso(j);
+            }
 
-// ===== UI PLAYERS =====
-function renderPlayers(){
-let html="";
-jogadores.forEach((j,i)=>{
-html+=`
-<div class="card">
-<b>${j.nome}</b><br>
-💰 ${j.saldo}<br>
+            fecharModal();
+            jogo.turno = (jogo.turno + 1) % jogo.jogadores.length;
+            btn.disabled = false;
+            renderizar();
+        }
 
-<button onclick="roll(${i})">🎲 Jogar</button>
-<button onclick="build(${i})">🏠 Construir</button>
-</div>
-`;
-});
-document.getElementById("players").innerHTML=html;
-}
+        function processarPouso(j) {
+            let tIdx = j.pos;
+            let tileCfg = TABULEIRO_DATA[tIdx];
+            let tileEstado = jogo.tiles[tIdx];
 
-// ===== DADO =====
-function roll(i){
-if(i!==turno)return;
+            // 1. Especial tiles
+            if(tileCfg.n === "VÁ PRISÃO") { j.pos = 10; j.preso = true; alert("POLÍCIA! Vá para a prisão!"); return; }
+            if(tileCfg.n === "SORTE") { sortearCarta(j); return; }
+            if(tileCfg.n === "IMPOSTO" || tileCfg.n === "TAXA LUXO") {
+                j.saldo -= tileCfg.p;
+                j.historico.unshift(`Pagou ${tileCfg.n} (-M$ ${tileCfg.p})`);
+                return;
+            }
 
-let p=jogadores[i];
+            // 2. Propriedades
+            if(tileCfg.p > 0) {
+                if(tileEstado.owner === null) {
+                    if(confirm(`Deseja comprar ${tileCfg.n} por M$ ${tileCfg.p}?`)) {
+                        if(j.saldo >= tileCfg.p) {
+                            j.saldo -= tileCfg.p;
+                            tileEstado.owner = j.id;
+                            j.historico.unshift(`Comprou ${tileCfg.n}`);
+                        } else { alert("Saldo insuficiente!"); }
+                    }
+                } else if(tileEstado.owner !== j.id) {
+                    let dono = jogo.jogadores[tileEstado.owner];
+                    let aluguel = Math.floor(tileCfg.p * 0.15);
+                    if(tileEstado.hotel) aluguel *= 5;
+                    else if(tileEstado.houses > 0) aluguel *= (tileEstado.houses + 1);
+                    
+                    j.saldo -= aluguel;
+                    dono.saldo += aluguel;
+                    j.historico.unshift(`Aluguel: -M$ ${aluguel} para ${dono.nome}`);
+                    dono.historico.unshift(`Recebeu aluguel: +M$ ${aluguel}`);
+                }
+            }
+        }
 
-if(p.jail){
-p.jailTurn++;
-if(p.jailTurn>=2){p.jail=false;p.jailTurn=0;}
-next();
-return;
-}
+        // --- SISTEMAS AUXILIARES ---
+        function sortearCarta(j) {
+            let c = cartasSorte[Math.floor(Math.random()*cartasSorte.length)];
+            j.saldo += c.v;
+            j.historico.unshift(`SORTE: ${c.t}`);
+            abrirModal(`<h3>SORTE OU REVÉS</h3><p style="font-size:1.2rem">${c.t}</p><button class="btn-roll" style="font-size:1rem" onclick="fecharModal()">OK</button>`);
+        }
 
-let dice=Math.floor(Math.random()*6)+1;
+        function construir(idx) {
+            let j = jogo.jogadores[idx];
+            let t = jogo.tiles[j.pos];
+            if(t.owner !== idx) return alert("Você precisa ser dono deste lugar!");
+            if(t.hotel) return alert("Já é um Hotel Máximo!");
+            
+            let custo = 150;
+            if(j.saldo >= custo) {
+                if(t.houses < 4) {
+                    t.houses++;
+                    j.historico.unshift(`Construiu casa em ${TABULEIRO_DATA[j.pos].n}`);
+                } else {
+                    t.houses = 0; t.hotel = true;
+                    j.historico.unshift(`UPOU PARA HOTEL em ${TABULEIRO_DATA[j.pos].n}`);
+                }
+                j.saldo -= custo;
+                renderizar();
+            } else { alert("Sem dinheiro para obras!"); }
+        }
 
-for(let x=0;x<dice;x++){
-setTimeout(()=>{
-p.pos=(p.pos+1)%40;
-render();
-},x*100);
-}
+        function pagarManual(id) {
+            let v = prompt("Quanto deseja pagar ao Banco?");
+            if(v && !isNaN(v)) {
+                jogo.jogadores[id].saldo -= parseInt(v);
+                jogo.jogadores[id].historico.unshift(`Pagamento manual: -M$ ${v}`);
+                renderizar();
+            }
+        }
 
-setTimeout(()=>{
-acao(i);
-next();
-},dice*100+200);
-}
+        function addField() { 
+            if(jogo.fields < 6) { 
+                let i = document.createElement('input'); 
+                i.className='input-name'; i.id=`name-${jogo.fields}`; i.placeholder=`Jogador ${jogo.fields+1}`; 
+                document.getElementById('name-inputs').appendChild(i); 
+                jogo.fields++; 
+            } 
+        }
 
-// ===== AÇÕES =====
-function acao(i){
-let p=jogadores[i];
-let t=tiles[p.pos];
+        function abrirModal(h) { document.getElementById('modal-content').innerHTML = h; document.getElementById('modal').style.display = 'flex'; }
+        function fecharModal() { document.getElementById('modal').style.display = 'none'; }
 
-// prisão
-if(p.pos===30){
-p.pos=10;
-p.jail=true;
-alert("Preso!");
-}
-
-// compra
-if(t.owner===null){
-if(confirm("Comprar "+casas[p.pos]+" por 200?")){
-p.saldo-=200;
-t.owner=i;
-p.imoveis.push(p.pos);
-}
-}
-
-// aluguel
-else if(t.owner!==i){
-let rent=50 + t.houses*40 + (t.hotel?100:0);
-p.saldo-=rent;
-jogadores[t.owner].saldo+=rent;
-}
-}
-
-// ===== CONSTRUIR =====
-function build(i){
-let p=jogadores[i];
-let t=tiles[p.pos];
-
-if(t.owner===i){
-if(!t.hotel){
-if(t.houses<4){
-t.houses++;
-p.saldo-=150;
-}else{
-t.houses=0;
-t.hotel=true;
-p.saldo-=300;
-}
-}
-render();
-}
-}
-
-// ===== TURNOS =====
-function next(){
-turno=(turno+1)%jogadores.length;
-}
-
-</script>
-
+    </script>
 </body>
 </html>
