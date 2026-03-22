@@ -1,0 +1,83 @@
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(135deg,#020617,#0f172a);
+  color:white;
+  text-align:center;
+}
+
+#game{
+  display:flex;
+  justify-content:center;
+  gap:30px;
+}
+
+#board{
+  display:grid;
+  grid-template-columns:repeat(11,60px);
+  grid-template-rows:repeat(11,60px);
+  gap:2px;
+}
+
+.tile{
+  background:#1e293b;
+  border:1px solid #334155;
+  font-size:9px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  transition:0.2s;
+}
+
+.tile:hover{
+  transform:scale(1.05);
+}
+
+.player{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  position:absolute;
+  bottom:2px;
+}
+
+.p1{background:red}
+.p2{background:cyan}
+
+.owner{
+  position:absolute;
+  top:2px;
+  right:2px;
+  font-size:8px;
+}
+
+.house{
+  position:absolute;
+  top:2px;
+  left:2px;
+  font-size:8px;
+}
+
+#panel{
+  width:230px;
+}
+
+button{
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:#22c55e;
+  cursor:pointer;
+  font-weight:bold;
+  margin:5px;
+}
+
+#log{
+  background:#020617;
+  height:250px;
+  overflow:auto;
+  padding:10px;
+  border-radius:10px;
+  font-size:12px;
+}
