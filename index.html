@@ -3,34 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monopoly Mobile Elite</title>
+    <title>Monopoly Elite 8</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0f172a; --panel: #1e293b; --gold: #fbbf24;
             --p0: #2ecc71; --p1: #e91e63; --p2: #3498db; --p3: #f1c40f;
+            --p4: #9b59b6; --p5: #e67e22; --p6: #1abc9c; --p7: #dcdde1;
         }
 
-        * { box-sizing: border-box; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        * { box-sizing: border-box; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
         
         body { 
-            margin: 0; background: var(--bg); color: white; height: 100dvh; 
+            margin: 0; background: var(--bg); color: white; height: 100vh; 
             display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* --- HEADER --- */
+        /* Barra de status ajustada para 8 pessoas */
         #status-bar { 
-            display: flex; gap: 8px; padding: 10px; overflow-x: auto; 
-            background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex; gap: 5px; padding: 8px; overflow-x: auto; 
+            background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(255,255,255,0.1);
+            scrollbar-width: none;
         }
-        .player-tab {
-            min-width: 90px; padding: 8px; background: var(--panel); border-radius: 12px;
-            text-align: center; border: 2px solid transparent; transition: 0.3s;
-        }
-        .player-tab.active { border-color: var(--gold); transform: scale(1.05); }
-        .mny { color: var(--p0); font-weight: 900; font-size: 13px; }
+        #status-bar::-webkit-scrollbar { display: none; }
 
-        /* --- BOARD (Responsive Square) --- */
+        .player-tab {
+            min-width: 80px; padding: 6px; background: var(--panel); border-radius: 10px;
+            text-align: center; border: 2px solid transparent; transition: 0.2s;
+            flex-shrink: 0;
+        }
+        .player-tab.active { border-color: var(--gold); transform: scale(1.05); background: #2d3748; }
+        .mny { color: var(--p0); font-weight: 900; font-size: 11px; }
+        .p-name { font-size: 10px; opacity: 0.8; }
+
         .game-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 5px; }
         .board-container { position: relative; width: 98vw; height: 98vw; max-width: 450px; max-height: 450px; }
         
@@ -38,68 +43,62 @@
             display: grid; width: 100%; height: 100%; 
             grid-template-columns: 1.3fr repeat(9, 1fr) 1.3fr; 
             grid-template-rows: 1.3fr repeat(9, 1fr) 1.3fr; 
-            background: #cbd5e1; border: 4px solid #000; border-radius: 4px;
+            background: #cbd5e1; border: 3px solid #000; border-radius: 4px;
         }
 
         .tile { 
-            background: white; border: 0.2px solid rgba(0,0,0,0.2); 
+            background: white; border: 0.1px solid rgba(0,0,0,0.2); 
             position: relative; display: flex; flex-direction: column; 
         }
         .t-color { height: 20%; width: 100%; }
-        .t-name { font-size: 5px; font-weight: 900; color: #000; text-align: center; text-transform: uppercase; flex: 1; display: flex; align-items: center; justify-content: center; }
-        .t-owner { position: absolute; bottom: 0; width: 100%; height: 4px; }
+        .t-name { font-size: 5px; font-weight: 900; color: #000; text-align: center; text-transform: uppercase; flex: 1; display: flex; align-items: center; justify-content: center; padding: 1px; overflow: hidden; }
+        .t-owner { position: absolute; bottom: 0; width: 100%; height: 3px; }
 
-        /* --- BUILDINGS --- */
-        .build-box { position: absolute; top: 1px; width: 100%; display: flex; justify-content: center; gap: 1px; }
-        .house { width: 4px; height: 4px; background: #16a34a; border-radius: 50%; }
-        .hotel { width: 10px; height: 4px; background: #dc2626; border-radius: 2px; }
-
-        /* --- PAWNS --- */
+        /* Peões menores para caberem 8 na mesma casa */
         .pawn { 
-            position: absolute; width: 18px; height: 18px; z-index: 50; 
+            position: absolute; width: 14px; height: 14px; z-index: 50; 
             transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
-            display: flex; align-items: center; justify-content: center; font-size: 14px;
+            display: flex; align-items: center; justify-content: center; font-size: 12px;
+            text-shadow: 0 0 2px black;
         }
 
-        /* --- CONTROLS --- */
         .controls { 
-            display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 10px; 
+            display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 10px; 
             padding: 15px; background: var(--panel); border-radius: 20px 20px 0 0;
         }
         .btn-round { 
             aspect-ratio: 1; border-radius: 50%; border: none; 
-            background: var(--gold); color: #000; font-weight: 900; font-size: 18px;
-            box-shadow: 0 4px 0 #b45309;
+            background: var(--gold); color: #000; font-weight: 900; font-size: 16px;
+            box-shadow: 0 4px 0 #b45309; cursor: pointer;
         }
         .btn-rect { 
             border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); 
-            background: rgba(255,255,255,0.05); color: white; font-weight: 700;
+            background: rgba(255,255,255,0.05); color: white; font-weight: 700; cursor: pointer; font-size: 12px;
         }
 
-        /* --- MODAL --- */
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 1000; backdrop-filter: blur(4px); }
         .modal { 
-            position: fixed; bottom: 20px; left: 5%; width: 90%; 
-            background: white; color: #000; border-radius: 24px; padding: 20px; 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 300px;
+            background: white; color: #000; border-radius: 20px; padding: 20px; 
             display: none; z-index: 1001; text-align: center;
-            animation: slideUp 0.3s ease-out;
         }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .action-btn { width: 100%; padding: 15px; margin-top: 8px; border-radius: 12px; border: none; font-weight: 900; }
+        .action-btn { width: 100%; padding: 12px; margin-top: 8px; border-radius: 10px; border: none; font-weight: 900; cursor: pointer; }
     </style>
 </head>
-<body>
+<body onload="init()">
 
 <div id="status-bar"></div>
 
 <div class="game-area">
     <div class="board-container">
         <div id="board">
-            <div style="grid-column: 4/9; grid-row: 5/8; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10;">
-                <div id="dice" style="display:flex; gap:10px; background:#fff; padding:10px; border-radius:12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3)">
-                    <span id="d1" style="font-size:30px; color:#222">⚀</span>
-                    <span id="d2" style="font-size:30px; color:#222">⚀</span>
+            <div style="grid-column: 2/11; grid-row: 2/11; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #e2e8f0; position: relative;">
+                <h2 style="color:#1a202c; margin:0; font-size: 18px; letter-spacing: 2px;">MONOPOLY</h2>
+                <div id="dice" style="display:flex; gap:8px; margin-top:5px;">
+                    <span id="d1" style="font-size:30px; color:#2d3748">⚀</span>
+                    <span id="d2" style="font-size:30px; color:#2d3748">⚀</span>
                 </div>
+                <div id="turn-indicator" style="color: #4a5568; font-size: 10px; margin-top: 5px; font-weight: bold;"></div>
             </div>
         </div>
         <div id="pawns"></div>
@@ -107,62 +106,50 @@
 </div>
 
 <div class="controls">
-    <button class="btn-rect" onclick="openBuild()">IMÓVEIS</button>
-    <button class="btn-round" id="roll-btn" onclick="roll()">GO!</button>
+    <button class="btn-rect" onclick="showMsg('Em breve: Sistema de Trocas')">TROCAR</button>
+    <button class="btn-round" id="roll-btn" onclick="roll()">GIRAR</button>
     <button class="btn-rect" onclick="openBank()">BANCO</button>
 </div>
 
 <div id="overlay"></div>
 <div class="modal" id="modal">
-    <h3 id="m-title"></h3>
-    <div id="m-body"></div>
+    <h3 id="m-title" style="margin:0; font-size: 16px;"></h3>
+    <p id="m-body" style="margin: 10px 0; font-size: 14px;"></p>
     <div id="m-footer"></div>
 </div>
 
 <script>
-    // --- DATABASE (PREÇOS CONFIGURADOS POR VOCÊ) ---
     const COLORS = {
-        marrom: { c: "#955436", b: 50 },
-        azul_claro: { c: "#87CEEB", b: 50 },
-        rosa: { c: "#D93A96", b: 100 },
-        laranja: { c: "#F7941D", b: 100 },
-        vermelho: { c: "#ED1C24", b: 150 },
-        amarelo: { c: "#FFF200", b: 150 },
-        verde: { c: "#1FB25A", b: 200 },
-        azul_escuro: { c: "#006AB3", b: 200 }
+        marrom: "#955436", azul_claro: "#87CEEB", rosa: "#D93A96", laranja: "#F7941D",
+        vermelho: "#ED1C24", amarelo: "#FFF200", verde: "#1FB25A", azul_escuro: "#006AB3"
     };
 
     const TILES = [
-        {n: "PARTIDA", g: null}, {n: "TAMANDARÉ", g: "marrom", p: 60}, {n: "COFRE", g: "chest"},
-        {n: "MEDITERRÂNEO", g: "marrom", p: 60}, {n: "IMPOSTO", g: null}, {n: "MARACANÃ", g: "train", p: 200},
-        {n: "9 DE JULHO", g: "azul_claro", p: 100}, {n: "SORTE", g: "luck"}, {n: "SÃO JOÃO", g: "azul_claro", p: 100},
-        {n: "PAULISTA", g: "azul_claro", p: 120}, {n: "PRISÃO", g: null}, {n: "V. SOUTO", g: "rosa", p: 140},
-        {n: "Luz", g: "util", p: 150}, {n: "NITERÓI", g: "rosa", p: 140}, {n: "ATLÂNTICA", g: "rosa", p: 160},
-        {n: "CARIOCA", g: "train", p: 200}, {n: "AV. JK", g: "laranja", p: 180}, {n: "COFRE", g: "chest"},
-        {n: "BERRINI", g: "laranja", p: 180}, {n: "F. LIMA", g: "laranja", p: 200}, {n: "PARADA", g: null},
+        {n: "PARTIDA", g: null}, {n: "AV. SUMARÉ", g: "marrom", p: 60}, {n: "COFRE", g: "chest"},
+        {n: "PRAÇA DA SÉ", g: "marrom", p: 60}, {n: "IMP. RENDA", g: null}, {n: "EST. MARACANÃ", g: "train", p: 200},
+        {n: "RUA 25 MARÇO", g: "azul_claro", p: 100}, {n: "SORTE", g: "luck"}, {n: "AV. SÃO JOÃO", g: "azul_claro", p: 100},
+        {n: "AV. PAULISTA", g: "azul_claro", p: 120}, {n: "PRISÃO", g: null}, {n: "AV. V. SOUTO", g: "rosa", p: 140},
+        {n: "CIA LUZ", g: "util", p: 150}, {n: "AV. NITERÓI", g: "rosa", p: 140}, {n: "AV. ATLÂNTICA", g: "rosa", p: 160},
+        {n: "EST. CARIOCA", g: "train", p: 200}, {n: "AV. JK", g: "laranja", p: 180}, {n: "COFRE", g: "chest"},
+        {n: "AV. BERRINI", g: "laranja", p: 180}, {n: "AV. F. LIMA", g: "laranja", p: 200}, {n: "ESTAC. GRÁTIS", g: null},
         {n: "IPANEMA", g: "vermelho", p: 220}, {n: "SORTE", g: "luck"}, {n: "LEBLON", g: "vermelho", p: 220},
-        {n: "COPACABANA", g: "vermelho", p: 240}, {n: "CONSOLAÇÃO", g: "train", p: 200}, {n: "C. JARDIM", g: "amarelo", p: 260},
-        {n: "PACAEMBU", g: "amarelo", p: 260}, {n: "Água", g: "util", p: 150}, {n: "IBIRAPUERA", g: "amarelo", p: 280},
-        {n: "VÁ PRESO", g: null}, {n: "BARRA", g: "verde", p: 300}, {n: "JARDIM", g: "verde", p: 300},
-        {n: "COFRE", g: "chest"}, {n: "LAGOA", g: "verde", p: 320}, {n: "REPUBLICA", g: "train", p: 200},
-        {n: "SORTE", g: "luck"}, {n: "MORUMBI", g: "azul_escuro", p: 350}, {n: "RIQUEZA", g: null}, {n: "O. FREIRE", g: "azul_escuro", p: 400}
+        {n: "COPACABANA", g: "vermelho", p: 240}, {n: "EST. CONSOLAÇÃO", g: "train", p: 200}, {n: "AV. C. JARDIM", g: "amarelo", p: 260},
+        {n: "AV. PACAEMBU", g: "amarelo", p: 260}, {n: "CIA ÁGUA", g: "util", p: 150}, {n: "IBIRAPUERA", g: "amarelo", p: 280},
+        {n: "VÁ PRESO", g: null}, {n: "B. TIJUCA", g: "verde", p: 300}, {n: "JARDIM BOTÂNICO", g: "verde", p: 300},
+        {n: "COFRE", g: "chest"}, {n: "LAGOA R. FREITAS", g: "verde", p: 320}, {n: "EST. REPÚBLICA", g: "train", p: 200},
+        {n: "SORTE", g: "luck"}, {n: "AV. MORUMBI", g: "azul_escuro", p: 350}, {n: "TAXA RIQUEZA", g: null}, {n: "RUA O. FREIRE", g: "azul_escuro", p: 400}
     ];
 
-    const DECK_LUCK = [
-        {t: "HERANÇA REBIDA: GANHE $100", a: p => p.money += 100},
-        {t: "MULTA DE TRÂNSITO: PAGUE $50", a: p => p.money -= 50},
-        {t: "ERRO DO BANCO: GANHE $200", a: p => p.money += 200},
-        {t: "VÁ PARA A PRISÃO IMEDIATAMENTE", a: p => { p.pos = 10; p.jail = 3; }},
-        {t: "AVANCE ATÉ O PONTO DE PARTIDA", a: p => { p.pos = 0; p.money += 200; }}
-    ];
+    const icons = ["🚗", "🚀", "🎩", "🦖", "🚢", "🐕", "🍕", "💎"];
+    let players = [];
+    let turn = 0;
 
-    let players = [
-        {id:0, name:"P1", icon:"🚗", money:1500, pos:0, jail:0},
-        {id:1, name:"P2", icon:"🚀", money:1500, pos:0, jail:0}
-    ], turn = 0;
-
-    // --- GAME ENGINE ---
     function init() {
+        // Criar 8 jogadores
+        for(let i=0; i<8; i++) {
+            players.push({id: i, name: "P"+(i+1), icon: icons[i], money: 1500, pos: 0});
+        }
+
         const b = document.getElementById('board');
         TILES.forEach((t, i) => {
             const d = document.createElement('div');
@@ -172,28 +159,20 @@
             else if(i<=30){ d.style.gridRow=1; d.style.gridColumn=i-19; }
             else { d.style.gridColumn=11; d.style.gridRow=i-29; }
             
-            const color = COLORS[t.g]?.c || (t.g==='luck'?'#f39c12':(t.g==='chest'?'#3498db':'transparent'));
-            d.innerHTML = `
-                <div class="t-color" style="background:${color}"></div>
-                <div class="build-box" id="bld-${i}"></div>
-                <div class="t-name">${t.n}</div>
-                <div class="t-owner" id="own-${i}"></div>
-            `;
+            const color = COLORS[t.g] || (t.g==='luck'?'#f39c12':(t.g==='chest'?'#3498db':'transparent'));
+            d.innerHTML = `<div class="t-color" style="background:${color}"></div><div class="t-name">${t.n}</div><div class="t-owner" id="own-${i}"></div>`;
             b.appendChild(d);
         });
+
         players.forEach(p => {
             const el = document.createElement('div'); el.className='pawn'; el.id=`p-${p.id}`; el.innerText=p.icon;
             document.getElementById('pawns').appendChild(el);
         });
-        updateUI();
+        updateUI(); updatePawns();
     }
 
     async function roll() {
         const p = players[turn];
-        if(p.jail > 0) { 
-            showModal("CADEIA", "Pagar $50 para sair?", [{t:"PAGAR", c:"#222", f:()=>{p.money-=50; p.jail=0; next();}}]); 
-            return; 
-        }
         document.getElementById('roll-btn').disabled = true;
         const d1 = Math.ceil(Math.random()*6), d2 = Math.ceil(Math.random()*6);
         document.getElementById('d1').innerText = ['⚀','⚁','⚂','⚃','⚄','⚅'][d1-1];
@@ -202,97 +181,84 @@
         for(let i=0; i<(d1+d2); i++) {
             p.pos = (p.pos + 1) % 40;
             if(p.pos === 0) p.money += 200;
-            updatePawns(); await new Promise(r => setTimeout(r, 150));
+            updatePawns(); await new Promise(r => setTimeout(r, 120));
         }
         handleTile();
     }
 
     function handleTile() {
         const p = players[turn], t = TILES[p.pos];
-        if(t.g === 'luck' || t.g === 'chest') {
-            const card = DECK_LUCK[Math.floor(Math.random()*DECK_LUCK.length)];
-            showModal(t.g.toUpperCase(), card.t, [{t:"OK", c:"#222", f:()=>{card.a(p); next();}}]);
-        } else if(t.p > 0) {
+        if(t.p > 0) {
             if(!t.owner) {
                 showModal(t.n, `Comprar por $${t.p}?`, [
-                    {t:"COMPRAR", c:"#2ecc71", f:()=>{ if(p.money>=t.p){p.money-=t.p; t.owner=p; t.lv=0; next();} else alert("Sem saldo!"); }},
+                    {t:"COMPRAR", c:"#2ecc71", f:()=>{ if(p.money>=t.p){p.money-=t.p; t.owner=p; next();}else{alert('Saldo insuficiente');} }},
                     {t:"PASSAR", c:"#94a3b8", f:next}
                 ]);
             } else if(t.owner !== p) {
-                const rent = Math.floor(t.p * 0.2) * ((t.lv || 0) + 1);
+                const rent = Math.floor(t.p * 0.15);
                 p.money -= rent; t.owner.money += rent;
                 showModal("ALUGUEL", `Pagou $${rent} para ${t.owner.name}`, [{t:"OK", c:"#e91e63", f:next}]);
             } else next();
         } else next();
     }
 
-    function openBuild() {
-        const p = players[turn];
-        const props = TILES.filter(t => t.owner === p && COLORS[t.g]);
-        if(!props.length) return alert("Sem terrenos!");
-        let h = props.map(t => `
-            <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee">
-                <span>${t.n}</span>
-                <button onclick="doBuild(${TILES.indexOf(t)})" style="background:#2ecc71; color:white; border:none; padding:5px; border-radius:5px">+$${COLORS[t.g].b}</button>
-            </div>`).join('');
-        showModal("CONSTRUIR", h, [{t: "FECHAR", c: "#222", f: closeModal}]);
-    }
-
-    window.doBuild = function(idx) {
-        const t = TILES[idx], p = players[turn], cost = COLORS[t.g].b;
-        if(p.money >= cost && (t.lv||0) < 5) {
-            p.money -= cost; t.lv = (t.lv||0) + 1;
-            const box = document.getElementById(`bld-${idx}`);
-            if(t.lv < 5) box.innerHTML += `<div class="house"></div>`;
-            else box.innerHTML = `<div class="hotel"></div>`;
-            updateUI(); openBuild();
-        }
-    }
-
-    function openBank() {
-        const p = players[turn];
-        showModal("BANCO", `Saldo: $${p.money}`, [
-            {t: "EMPRÉSTIMO $500", c: "#2ecc71", f: () => { p.money += 500; updateUI(); closeModal(); }},
-            {t: "FECHAR", c: "#222", f: closeModal}
-        ]);
-    }
-
     function updateUI() {
         const bar = document.getElementById('status-bar');
         bar.innerHTML = players.map(p => `
-            <div class="player-tab ${turn===p.id?'active':''}">
-                <div style="font-size:18px">${p.icon}</div>
+            <div class="player-tab ${turn===p.id?'active':''}" id="tab-${p.id}">
+                <div style="font-size:16px">${p.icon}</div>
+                <div class="p-name">${p.name}</div>
                 <div class="mny">$${p.money}</div>
             </div>`).join('');
-        players.forEach(p => {
-            TILES.forEach((t, i) => { if(t.owner === p) document.getElementById(`own-${i}`).style.background = `var(--p${p.id})`; });
-        });
-        updatePawns();
+        
+        document.getElementById('turn-indicator').innerText = `VEZ DE: ${players[turn].icon} ${players[turn].name}`;
+        
+        // Auto-scroll para o jogador da vez na barra
+        const activeTab = document.getElementById(`tab-${turn}`);
+        if(activeTab) activeTab.scrollIntoView({behavior: "smooth", inline: "center", block: "nearest"});
     }
 
     function updatePawns() {
         players.forEach(p => {
             const t = document.getElementById(`t-${p.pos}`);
             const el = document.getElementById(`p-${p.id}`);
-            el.style.top = (t.offsetTop + 5 + (p.id*2)) + "px";
-            el.style.left = (t.offsetLeft + 5 + (p.id*2)) + "px";
+            // Offset para não sobrepor os 8 peões (formato 3x3)
+            const offX = (p.id % 3) * 10;
+            const offY = Math.floor(p.id / 3) * 10;
+            el.style.top = (t.offsetTop + 2 + offY) + "px";
+            el.style.left = (t.offsetLeft + 2 + offX) + "px";
         });
     }
 
     function showModal(t, b, btns) {
         document.getElementById('m-title').innerText = t;
-        document.getElementById('m-body').innerHTML = b;
-        const f = document.getElementById('m-footer'); f.innerHTML = "";
+        document.getElementById('m-body').innerText = b;
+        const foot = document.getElementById('m-footer'); foot.innerHTML = "";
         btns.forEach(btn => {
-            const e = document.createElement('button'); e.className="action-btn"; e.innerText=btn.t; e.style.background=btn.c; e.style.color="white"; e.onclick=btn.f; f.appendChild(e);
+            const eb = document.createElement('button'); eb.className='action-btn'; eb.innerText=btn.t;
+            eb.style.background=btn.c; eb.style.color="white"; eb.onclick=btn.f; foot.appendChild(eb);
         });
-        document.getElementById('overlay').style.display='block'; document.getElementById('modal').style.display='block';
+        document.getElementById('overlay').style.display='block';
+        document.getElementById('modal').style.display='block';
     }
 
-    function closeModal() { document.getElementById('overlay').style.display='none'; document.getElementById('modal').style.display='none'; }
-    function next() { closeModal(); turn = (turn + 1) % players.length; document.getElementById('roll-btn').disabled = false; updateUI(); }
+    function next() {
+        document.getElementById('overlay').style.display='none';
+        document.getElementById('modal').style.display='none';
+        turn = (turn + 1) % players.length;
+        document.getElementById('roll-btn').disabled = false;
+        updateUI();
+    }
 
-    init();
+    function openBank() {
+        const p = players[turn];
+        showModal("BANCO", `Olá ${p.icon}, seu saldo atual é de $${p.money}. Deseja um empréstimo de emergência?`, [
+            {t: "PEGAR $500", c: "#2ecc71", f: () => { p.money += 500; updateUI(); next(); }},
+            {t: "FECHAR", c: "#222", f: () => { document.getElementById('overlay').style.display='none'; document.getElementById('modal').style.display='none'; }}
+        ]);
+    }
+
+    function showMsg(m) { alert(m); }
 </script>
 </body>
 </html>
