@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monopoly Ultra 3D</title>
+<title>Monopoly Ultra Mobile</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
 
 <style>
 :root{
 --gold:#FFD700;
+--bg:#0f0f0f;
 --glass:rgba(255,255,255,0.08);
 }
 
@@ -24,6 +25,37 @@ flex-direction:column;
 align-items:center;
 }
 
+/* SETUP */
+#setup{
+padding:15px;
+text-align:center;
+}
+select,input{
+padding:8px;
+border-radius:8px;
+border:none;
+margin:5px;
+}
+
+/* PLAYERS */
+.players{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+justify-content:center;
+}
+.player{
+background:var(--glass);
+padding:6px;
+border-radius:10px;
+font-size:11px;
+text-align:center;
+}
+.player.active{
+border:2px solid var(--gold);
+box-shadow:0 0 10px gold;
+}
+
 /* BOARD 3D */
 .board{
 width:95vw;
@@ -32,14 +64,14 @@ max-width:420px;
 max-height:420px;
 display:grid;
 grid-template-columns:repeat(10,1fr);
+grid-template-rows:repeat(10,1fr);
 background:#cde6d0;
-border-radius:20px;
-transform:perspective(900px) rotateX(25deg);
-box-shadow:0 40px 80px rgba(0,0,0,.7);
+border-radius:15px;
 overflow:hidden;
+transform:perspective(800px) rotateX(8deg);
+box-shadow:0 30px 50px rgba(0,0,0,.6);
 }
 
-/* TILE 3D */
 .tile{
 border:1px solid rgba(0,0,0,.1);
 font-size:6px;
@@ -47,52 +79,22 @@ display:flex;
 align-items:center;
 justify-content:center;
 position:relative;
-transition:.3s;
-background:linear-gradient(#fff,#ddd);
-}
-.tile:hover{
-transform:translateZ(20px) scale(1.2);
-z-index:2;
-box-shadow:0 0 15px white;
+background:linear-gradient(145deg,#dff5e1,#b9d6bb);
 }
 
-/* OWNER */
 .owner{
 position:absolute;
 bottom:0;
-height:5px;
+height:4px;
 width:100%;
 }
 
-/* PEÃO */
+/* PAWN */
 .pawn{
 position:absolute;
-font-size:18px;
+font-size:16px;
 transition:.3s;
-animation:float 2s infinite;
-}
-@keyframes float{
-0%,100%{transform:translateY(0)}
-50%{transform:translateY(-6px)}
-}
-
-/* PLAYERS */
-.players{
-display:flex;
-flex-wrap:wrap;
-gap:5px;
-justify-content:center;
-}
-.player{
-background:var(--glass);
-padding:6px;
-border-radius:10px;
-font-size:10px;
-text-align:center;
-}
-.player.active{
-border:2px solid var(--gold);
-box-shadow:0 0 10px gold;
+filter:drop-shadow(0 2px 3px black);
 }
 
 /* BUTTON */
@@ -104,12 +106,6 @@ border-radius:20px;
 background:linear-gradient(135deg,#00f2fe,#4facfe);
 color:white;
 font-weight:bold;
-}
-
-/* DICE */
-#dice{
-font-size:28px;
-margin-top:10px;
 }
 
 /* MODAL */
@@ -131,8 +127,22 @@ z-index:10;
 <body>
 
 <div id="setup">
-<h3>Jogadores</h3>
-<div id="setup-list"></div>
+<h2>Configurar Jogo</h2>
+
+<select id="qtd" onchange="criarInputs()">
+<option value="2">2 Jogadores</option>
+<option value="3">3 Jogadores</option>
+<option value="4">4 Jogadores</option>
+<option value="5">5 Jogadores</option>
+<option value="6">6 Jogadores</option>
+<option value="7">7 Jogadores</option>
+<option value="8">8 Jogadores</option>
+<option value="9">9 Jogadores</option>
+<option value="10">10 Jogadores</option>
+</select>
+
+<div id="inputs"></div>
+
 <button onclick="startGame()">Iniciar</button>
 </div>
 
@@ -148,51 +158,53 @@ z-index:10;
 <script>
 const icons=["🦆","🚗","🐱","🚀","🍕","👻","🎩","⚽","🍦","💎"];
 
-const PROPERTY={
-1:{price:60,rent:[2,10,30,90,160,250]},
-3:{price:60,rent:[4,20,60,180,320,450]},
-6:{price:100,rent:[6,30,90,270,400,550]},
-8:{price:100,rent:[6,30,90,270,400,550]}
-};
-
 let players=[];
 let turn=0;
 
-/* INIT */
-for(let i=0;i<10;i++){
-players.push({
-id:i,name:"P"+(i+1),icon:icons[i],
-money:1500,pos:0,props:[],debt:0,
-houses:{},inJail:false,jail:0
-});
-document.getElementById("setup-list").innerHTML+=`
-<input value="P${i+1}" onchange="players[${i}].name=this.value"><br>
-`;
+/* CRIAR INPUTS */
+function criarInputs(){
+inputs.innerHTML="";
+let qtd=parseInt(qtdSelect.value||qtd.value);
+for(let i=0;i<qtd;i++){
+inputs.innerHTML+=`
+<div>
+<input placeholder="Nome jogador ${i+1}" id="nome${i}">
+<select id="icon${i}">
+${icons.map(i=>`<option>${i}</option>`).join("")}
+</select>
+</div>`;
 }
+}
+criarInputs();
 
 /* START */
 function startGame(){
+let qtd=parseInt(document.getElementById("qtd").value);
+
+players=[];
+for(let i=0;i<qtd;i++){
+players.push({
+id:i,
+name:document.getElementById("nome"+i).value||("P"+(i+1)),
+icon:document.getElementById("icon"+i).value,
+money:1500,
+pos:0,
+inJail:false,
+jail:0
+});
+}
+
 setup.style.display="none";
 
-for(let i=0;i<40;i++){
+/* CRIA TABULEIRO */
+for(let i=0;i<100;i++){
 const t=document.createElement("div");
 t.className="tile";
 t.id="t"+i;
-
-if(i===10)t.innerText="PRISÃO";
-else if(i===30)t.innerText="VÁ PRESO";
-else t.innerText=i;
-
-const o=document.createElement("div");
-o.className="owner";
-o.id="o"+i;
-t.appendChild(o);
-
-t.onclick=()=>build(i);
-
 board.appendChild(t);
 }
 
+/* PEÕES */
 players.forEach(p=>{
 const pawn=document.createElement("div");
 pawn.className="pawn";
@@ -207,16 +219,16 @@ update();
 
 /* RENDER */
 function render(){
-players.innerHTML="";
+playersDiv.innerHTML="";
 players.forEach(p=>{
-players.innerHTML+=`
+playersDiv.innerHTML+=`
 <div class="player ${turn===p.id?"active":""}">
 ${p.icon}<br>${p.name}<br>💰${p.money}
 </div>`;
 });
 }
 
-/* DICE */
+/* DADO */
 async function rollDice(){
 let p=players[turn];
 
@@ -240,7 +252,7 @@ dice.innerText=d1+"+"+d2;
 await move(d1+d2);
 
 if(d1===d2){
-show("🎲 Duplo!");
+show("Duplo! joga de novo");
 }else next();
 }
 
@@ -249,7 +261,7 @@ async function move(s){
 let p=players[turn];
 
 for(let i=0;i<s;i++){
-p.pos=(p.pos+1)%40;
+p.pos=(p.pos+1)%100;
 update();
 await new Promise(r=>setTimeout(r,120));
 }
@@ -257,56 +269,17 @@ await new Promise(r=>setTimeout(r,120));
 if(p.pos===30){
 p.pos=10;
 p.inJail=true;
-show("🚔 Preso!");
-}
-else tileAction(p);
-}
-
-/* TILE */
-function tileAction(p){
-let t=p.pos;
-
-if(PROPERTY[t]){
-let owner=players.find(x=>x.props.includes(t));
-
-if(!owner){
-if(confirm("Comprar por "+PROPERTY[t].price)){
-p.money-=PROPERTY[t].price;
-p.props.push(t);
-setOwner(t,p.id);
-}
-}else if(owner.id!==p.id){
-let lvl=p.houses[t]||0;
-let rent=PROPERTY[t].rent[lvl];
-p.money-=rent;
-owner.money+=rent;
-show("💸 "+rent);
-}
+show("Foi preso!");
 }
 }
 
-/* BUILD */
-function build(pos){
-let p=players[turn];
-if(p.props.includes(pos)){
-p.houses[pos]=(p.houses[pos]||0)+1;
-show("🏠 Construído");
-}
-}
-
-/* OWNER */
-function setOwner(i,id){
-document.getElementById("o"+i).style.background=
-["#2ecc71","#e91e63","#3498db","#f1c40f","#9b59b6","#e67e22","#1abc9c","#ecf0f1","#34495e","#ff7675"][id];
-}
-
-/* BANK */
+/* BANCO */
 function bank(){
 let p=players[turn];
 p.money+=500;
-p.debt+=600;
-show("🏦 +500");
-update();
+p.debt=(p.debt||0)+600;
+show("Pegou empréstimo +500");
+render();
 }
 
 /* UPDATE */
