@@ -3,112 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monopoly Brasil - Versão Estável</title>
+    <title>Monopoly Brasil - Oficial</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #00eb84; --bg: #0b0e14; --card: #1c222d; --text: #ffffff; --board-bg: #cee6d5; --edge: #222; --gold: #f1c40f; }
         * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; padding: 0; }
         body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 5px; overflow-x: hidden; }
         
+        /* TELAS */
         #setup-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .setup-container { width: 100%; max-width: 500px; background: var(--card); padding: 25px; border-radius: 25px; text-align: center; border: 1px solid #333; }
-        .player-config-grid { display: grid; grid-template-columns: 1fr; gap: 10px; max-height: 300px; overflow-y: auto; margin: 15px 0; }
-        .player-config-card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; display: flex; gap: 10px; align-items: center; }
-        .player-config-card input { flex: 1; background: #000; border: 1px solid #444; color: white; padding: 8px; border-radius: 8px; }
+        .game-layout { display: none; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
 
-        .game-layout { display: none; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
+        /* TABULEIRO */
         #board-container {
             position: relative; width: 98vw; height: 98vw; max-width: 600px; max-height: 600px;
-            background: var(--board-bg); border: 6px solid var(--edge); display: grid;
+            background: var(--board-bg); border: 5px solid var(--edge); display: grid;
             grid-template-columns: 1.5fr repeat(9, 1fr) 1.5fr; grid-template-rows: 1.5fr repeat(9, 1fr) 1.5fr;
         }
-        .tile { border: 0.2px solid rgba(0,0,0,0.15); font-size: 6px; font-weight: 800; color: #000; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; text-align: center; }
+        .tile { border: 0.1px solid rgba(0,0,0,0.2); font-size: 6px; font-weight: 800; color: #000; display: flex; flex-direction: column; align-items: center; justify-content: space-between; position: relative; text-align: center; overflow: hidden; }
         .bar { width: 100%; height: 12px; border-bottom: 1px solid #000; }
-        .pawn-grid { position: absolute; bottom: 2px; width: 100%; height: 50%; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; justify-items: center; }
-        .pawn { font-size: 14px; transition: 0.2s; z-index: 5; }
-        .board-center { grid-column: 2 / 11; grid-row: 2 / 11; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .pawn-grid { position: absolute; bottom: 2px; width: 100%; height: 40%; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; justify-items: center; }
+        .build-area { position: absolute; top: 13px; font-size: 8px; width: 100%; display: flex; justify-content: center; gap: 1px; }
+        
+        /* PEÕES E ANIMAÇÃO */
+        .pawn { font-size: 14px; transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 10; }
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3) translateY(-10px); } }
+        .moving { animation: bounce 0.3s ease; }
 
-        /* CARTA QUE TRAVAVA - AGORA COM CLICK PARA FECHAR */
+        /* CARTAS E OVERLAY */
         #overlay-card { 
-            position: absolute; width: 90%; background: white; color: black; padding: 20px; 
-            border-radius: 15px; border: 5px solid var(--gold); display: none; z-index: 1000; 
-            text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.8); cursor: pointer;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; background: white; color: black; padding: 20px; 
+            border-radius: 15px; border: 5px solid var(--gold); display: none; z-index: 2000; 
+            text-align: center; box-shadow: 0 0 50px rgba(0,0,0,0.5);
         }
-        #overlay-card::after { content: "Pressione para continuar"; display: block; font-size: 10px; margin-top: 15px; color: #666; font-weight: bold; }
 
-        .players-sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 98vw; max-width: 600px; margin-top: 10px; }
-        .p-card { background: var(--card); padding: 10px; border-radius: 15px; border: 3px solid transparent; }
-        .p-card.active { border-color: var(--primary); }
-        .btn { border: none; border-radius: 50px; font-weight: 800; cursor: pointer; }
+        /* UI JOGADORES */
+        .players-sidebar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 98vw; max-width: 600px; }
+        .p-card { background: var(--card); padding: 10px; border-radius: 12px; border: 3px solid transparent; position: relative; }
+        .p-card.active { border-color: var(--primary); background: #252d3d; }
+        
+        .btn { border: none; border-radius: 50px; font-weight: 800; cursor: pointer; transition: 0.2s; }
         .btn-main { background: var(--gold); color: #000; padding: 12px 25px; box-shadow: 0 4px 0 #b7950b; }
-        .btn-action { background: var(--primary); color: #000; padding: 10px; margin-top: 5px; width: 100%; font-size: 12px; }
+        .btn-action { background: var(--primary); color: #000; padding: 8px; margin-top: 5px; width: 100%; font-size: 11px; }
+        .btn-loan { background: #4a5568; color: white; font-size: 9px; padding: 3px; width: 100%; margin-top: 5px; }
     </style>
 </head>
 <body>
 
     <div id="setup-screen">
-        <div class="setup-container">
-            <h1 style="color:var(--primary)">MONOPOLY BRASIL</h1>
-            <p>Jogadores (2-8):</p>
-            <input type="number" id="qty" value="2" min="2" max="8" onchange="gerarConfig()" style="padding:10px; width:60px;">
-            <div id="config-area" class="player-config-grid"></div>
-            <button onclick="iniciarJogo()" class="btn btn-main" style="width:100%">JOGAR</button>
+        <div style="background:var(--card); padding:30px; border-radius:20px; text-align:center;">
+            <h1 style="color:var(--primary); margin-bottom:10px;">MONOPOLY BRASIL</h1>
+            <p>Quantos vão jogar?</p>
+            <input type="number" id="qty" value="2" min="2" max="8" style="padding:10px; border-radius:10px; width:60px; margin:15px;">
+            <button onclick="iniciarJogo()" class="btn btn-main" style="width:100%">INICIAR</button>
         </div>
     </div>
 
     <div class="game-layout" id="game-ui">
         <div id="board-container">
-            <div id="overlay-card" onclick="fecharCarta()"></div>
-            <div class="board-center">
-                <div id="dice-view" style="font-size:35px; margin-bottom:10px;">🎲</div>
+            <div id="overlay-card">
+                <div id="card-content"></div>
+                <button class="btn btn-action" onclick="fecharCarta()" style="margin-top:15px; background:var(--gold)">OK, ENTENDI!</button>
+            </div>
+            <div class="board-center" style="grid-column: 2/11; grid-row: 2/11; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <div id="dice-view" style="font-size:40px; margin-bottom:10px;">🎲</div>
                 <button id="roll-btn" class="btn btn-main" onclick="rolarDados()">ROLAR DADOS</button>
-                <button id="buy-btn" class="btn btn-action" style="display:none" onclick="comprarProp()"></button>
+                <button id="buy-btn" class="btn btn-action" style="display:none; width:150px;" onclick="comprarProp()"></button>
             </div>
         </div>
         <div class="players-sidebar" id="sidebar"></div>
     </div>
 
     <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const AVATARES = ["🏎️", "🎩", "🐕", "🦖", "🚢", "🐈", "🦆", "🛵"];
         const CORES = ["#ff4757", "#1e90ff", "#2ed573", "#ffa502", "#a29bfe", "#fd79a8", "#fab1a0", "#00cec9"];
 
+        // DADOS DO TABULEIRO (Fiel à sua imagem)
         const TABULEIRO = [
-            {n:"PARTIDA"}, {n:"AV. SUMARÉ", c:"#955436", p:60, b:50, r:[2, 10, 30, 90, 160, 250]}, {n:"COFRE"}, 
-            {n:"PRAÇA DA SÉ", c:"#955436", p:60, b:50, r:[4, 20, 60, 180, 320, 450]}, {n:"IMPOSTO", p:200}, 
-            {n:"METRÔ MARACANÃ", p:200, tipo:"metro"}, {n:"25 DE MARÇO", c:"#aae0fa", p:100, b:50, r:[6, 30, 90, 270, 400, 550]}, 
-            {n:"SORTE"}, {n:"AV. SÃO JOÃO", c:"#aae0fa", p:100, b:50, r:[6, 30, 90, 270, 400, 550]}, 
-            {n:"AV. PAULISTA", c:"#aae0fa", p:120, b:50, r:[8, 40, 100, 300, 450, 600]}, {n:"PRISÃO"}, 
-            {n:"VIEIRA SOUTO", c:"#d93a96", p:140, b:100, r:[10, 50, 150, 450, 625, 750]}, {n:"CIA ELÉTRICA", p:150, tipo:"util"}, 
-            {n:"NITEROI", c:"#d93a96", p:140, b:100, r:[10, 50, 150, 450, 625, 750]}, {n:"ATLÂNTICA", c:"#d93a96", p:160, b:100, r:[12, 60, 180, 500, 700, 900]}, 
-            {n:"METRÔ CARIOCA", p:200, tipo:"metro"}, {n:"JK", c:"#f7941d", p:180, b:100, r:[14, 70, 200, 550, 750, 950]}, {n:"COFRE"}, 
-            {n:"BERRINI", c:"#f7941d", p:180, b:100, r:[14, 70, 200, 550, 750, 950]}, {n:"FARIA LIMA", c:"#f7941d", p:200, b:100, r:[16, 80, 220, 600, 800, 1000]},
-            {n:"ESTAC. GRÁTIS"}, {n:"IPANEMA", c:"#ed1c24", p:220, b:150, r:[18, 90, 250, 700, 875, 1050]}, {n:"SORTE"}, 
-            {n:"LEBLON", c:"#ed1c24", p:220, b:150, r:[18, 90, 250, 700, 875, 1050]}, {n:"COPACABANA", c:"#ed1c24", p:240, b:150, r:[20, 100, 300, 750, 925, 1100]}, 
-            {n:"METRÔ CONSOLAÇÃO", p:200, tipo:"metro"}, {n:"CIDADE JARDIM", c:"#fef200", p:260, b:150, r:[22, 110, 330, 800, 975, 1150]}, 
-            {n:"PACAEMBU", c:"#fef200", p:260, b:150, r:[22, 110, 330, 800, 975, 1150]}, {n:"ÁGUA", p:150, tipo:"util"}, 
-            {n:"IBIRAPUERA", c:"#fef200", p:280, b:150, r:[24, 120, 360, 850, 1025, 1200]}, {n:"VÁ PRISÃO"}, 
-            {n:"BARRA", c:"#19a05e", p:300, b:200, r:[26, 130, 390, 900, 1100, 1275]}, {n:"BOTÂNICO", c:"#19a05e", p:300, b:200, r:[26, 130, 390, 900, 1100, 1275]}, 
-            {n:"COFRE"}, {n:"LAGOA", c:"#19a05e", p:320, b:200, r:[28, 150, 450, 1000, 1200, 1400]}, 
-            {n:"METRÔ REPÚBLICA", p:200, tipo:"metro"}, {n:"SORTE"}, 
-            {n:"MORUMBI", c:"#0068a7", p:350, b:200, r:[35, 175, 500, 1100, 1300, 1500]}, {n:"TAXA RIQUEZA", p:100}, 
+            {n:"PARTIDA", p:0}, 
+            {n:"AV. SUMARÉ", c:"#955436", p:60, b:50, r:[2, 10, 30, 90, 160, 250]}, 
+            {n:"COFRE"}, 
+            {n:"PRAÇA DA SÉ", c:"#955436", p:60, b:50, r:[4, 20, 60, 180, 320, 450]}, 
+            {n:"IMPOSTO", p:200}, 
+            {n:"METRÔ MARACANÃ", p:200, tipo:"metro"}, 
+            {n:"25 DE MARÇO", c:"#aae0fa", p:100, b:50, r:[6, 30, 90, 270, 400, 550]}, 
+            {n:"SORTE"}, 
+            {n:"AV. SÃO JOÃO", c:"#aae0fa", p:100, b:50, r:[6, 30, 90, 270, 400, 550]}, 
+            {n:"AV. PAULISTA", c:"#aae0fa", p:120, b:50, r:[8, 40, 100, 300, 450, 600]},
+            {n:"PRISÃO"}, 
+            {n:"VIEIRA SOUTO", c:"#d93a96", p:140, b:100, r:[10, 50, 150, 450, 625, 750]}, 
+            {n:"CIA ELÉTRICA", p:150, tipo:"util"}, 
+            {n:"NITEROI", c:"#d93a96", p:140, b:100, r:[10, 50, 150, 450, 625, 750]}, 
+            {n:"ATLÂNTICA", c:"#d93a96", p:160, b:100, r:[12, 60, 180, 500, 700, 900]}, 
+            {n:"METRÔ CARIOCA", p:200, tipo:"metro"}, 
+            {n:"JK", c:"#f7941d", p:180, b:100, r:[14, 70, 200, 550, 750, 950]}, 
+            {n:"COFRE"}, 
+            {n:"BERRINI", c:"#f7941d", p:180, b:100, r:[14, 70, 200, 550, 750, 950]}, 
+            {n:"FARIA LIMA", c:"#f7941d", p:200, b:100, r:[16, 80, 220, 600, 800, 1000]},
+            {n:"ESTAC. GRÁTIS"}, 
+            {n:"IPANEMA", c:"#ed1c24", p:220, b:150, r:[18, 90, 250, 700, 875, 1050]}, 
+            {n:"SORTE"}, 
+            {n:"LEBLON", c:"#ed1c24", p:220, b:150, r:[18, 90, 250, 700, 875, 1050]}, 
+            {n:"COPACABANA", c:"#ed1c24", p:240, b:150, r:[20, 100, 300, 750, 925, 1100]}, 
+            {n:"METRÔ CONSOLAÇÃO", p:200, tipo:"metro"}, 
+            {n:"CIDADE JARDIM", c:"#fef200", p:260, b:150, r:[22, 110, 330, 800, 975, 1150]}, 
+            {n:"PACAEMBU", c:"#fef200", p:260, b:150, r:[22, 110, 330, 800, 975, 1150]}, 
+            {n:"ÁGUA", p:150, tipo:"util"}, 
+            {n:"IBIRAPUERA", c:"#fef200", p:280, b:150, r:[24, 120, 360, 850, 1025, 1200]},
+            {n:"VÁ PRISÃO"}, 
+            {n:"BARRA", c:"#19a05e", p:300, b:200, r:[26, 130, 390, 900, 1100, 1275]}, 
+            {n:"BOTÂNICO", c:"#19a05e", p:300, b:200, r:[26, 130, 390, 900, 1100, 1275]}, 
+            {n:"COFRE"}, 
+            {n:"LAGOA", c:"#19a05e", p:320, b:200, r:[28, 150, 450, 1000, 1200, 1400]}, 
+            {n:"METRÔ REPÚBLICA", p:200, tipo:"metro"}, 
+            {n:"SORTE"}, 
+            {n:"MORUMBI", c:"#0068a7", p:350, b:200, r:[35, 175, 500, 1100, 1300, 1500]}, 
+            {n:"TAXA RIQUEZA", p:100}, 
             {n:"OSCAR FREIRE", c:"#0068a7", p:400, b:200, r:[50, 200, 600, 1400, 1700, 2000]}
         ];
 
-        let jogo = { jogadores: [], turno: 0, props: {} };
+        let jogo = { jogadores: [], turno: 0, props: {}, dadoSoma: 0 };
 
-        function gerarConfig() {
-            let n = document.getElementById('qty').value;
-            let html = "";
-            for(let i=0; i<n; i++) html += `<div class="player-config-card"><input type="text" id="n-${i}" value="Jogador ${i+1}"></div>`;
-            document.getElementById('config-area').innerHTML = html;
+        function playSfx(freq, dur) {
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+            o.start(); o.stop(audioCtx.currentTime + dur);
         }
-        gerarConfig();
 
         function iniciarJogo() {
             let n = document.getElementById('qty').value;
-            for(let i=0; i<n; i++) jogo.jogadores.push({ id:i, nome:document.getElementById(`n-${i}`).value, avatar:AVATARES[i], saldo:1500, pos:0, cor:CORES[i] });
+            for(let i=0; i<n; i++) {
+                jogo.jogadores.push({ id:i, nome:`Jogador ${i+1}`, avatar:AVATARES[i], saldo:1500, pos:0, cor:CORES[i] });
+            }
             document.getElementById('setup-screen').style.display = "none";
             document.getElementById('game-ui').style.display = "flex";
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             desenharBoard(); render();
         }
 
@@ -124,17 +157,36 @@
                 if(i > 10 && i < 20) el.style.gridRow = 21 - i;
                 if(i > 20 && i < 30) el.style.gridColumn = i - 19;
                 if(i > 30) el.style.gridRow = i - 29;
-                el.innerHTML = `${casa.c ? `<div class="bar" style="background:${casa.c}"></div>`:''}<span>${casa.n}</span><div class="pawn-grid" id="pg-${i}"></div><div id="build-${i}" style="font-size:8px"></div>`;
+                
+                el.innerHTML = `
+                    ${casa.c ? `<div class="bar" style="background:${casa.c}"></div>` : ''}
+                    <div class="build-area" id="build-${i}"></div>
+                    <span style="padding:2px">${casa.n}</span>
+                    <div class="pawn-grid" id="pg-${i}"></div>
+                `;
                 container.appendChild(el);
             });
         }
 
-        function rolarDados() {
-            let total = (Math.floor(Math.random()*6)+1) + (Math.floor(Math.random()*6)+1);
-            document.getElementById('dice-view').innerText = "🎲 " + total;
+        async function rolarDados() {
+            const btn = document.getElementById('roll-btn'); btn.disabled = true;
+            let d1 = Math.floor(Math.random()*6)+1;
+            let d2 = Math.floor(Math.random()*6)+1;
+            jogo.dadoSoma = d1 + d2;
+            document.getElementById('dice-view').innerText = "🎲 " + jogo.dadoSoma;
+            playSfx(150, 0.2);
+
             let j = jogo.jogadores[jogo.turno];
-            j.pos = (j.pos + total) % 40;
+            for(let s=0; s < jogo.dadoSoma; s++) {
+                j.pos = (j.pos + 1) % 40;
+                if(j.pos === 0) { j.saldo += 200; playSfx(800, 0.3); }
+                render(); playSfx(400, 0.05);
+                await new Promise(r => setTimeout(r, 200));
+            }
             processarCasa(j);
+            btn.disabled = false;
+            btn.innerText = "PASSAR VEZ";
+            btn.onclick = passarVez;
         }
 
         function processarCasa(j) {
@@ -142,60 +194,87 @@
             const prop = jogo.props[j.pos];
 
             if(casa.n === "SORTE" || casa.n === "COFRE") {
-                const sorte = Math.random() > 0.5 ? 100 : -100;
-                j.saldo += sorte;
-                mostrarCarta(`${casa.n}`, `${sorte > 0 ? 'Recebeu' : 'Pagou'} $${Math.abs(sorte)} por sorte!`);
+                const valor = Math.random() > 0.5 ? 150 : -100;
+                j.saldo += valor;
+                mostrarCarta(casa.n, valor > 0 ? `Parabéns! Você recebeu $${valor}` : `Que azar! Você pagou $${Math.abs(valor)}`);
             } else if(prop && prop.dono !== j.id) {
                 let aluguel = casa.r ? casa.r[prop.nivel] : 50;
                 j.saldo -= aluguel; jogo.jogadores[prop.dono].saldo += aluguel;
+                playSfx(200, 0.4);
             } else if(casa.p && !prop) {
                 const b = document.getElementById('buy-btn'); b.style.display = "block";
-                b.innerText = `COMPRAR ${casa.n} ($${casa.p})`;
+                b.innerText = `COMPRAR ($${casa.p})`;
+            } else if(prop && prop.dono === j.id && prop.nivel < 5 && casa.b) {
+                const b = document.getElementById('buy-btn'); b.style.display = "block";
+                b.innerText = prop.nivel < 4 ? `CASA ($${casa.b})` : `HOTEL ($${casa.b})`;
             }
-            
-            document.getElementById('roll-btn').innerText = "PASSAR VEZ";
-            document.getElementById('roll-btn').onclick = passarVez;
-            render();
-        }
-
-        function mostrarCarta(titulo, texto) {
-            const card = document.getElementById('overlay-card');
-            card.innerHTML = `<h2>${titulo}</h2><p>${texto}</p>`;
-            card.style.display = "block";
-        }
-
-        function fecharCarta() {
-            document.getElementById('overlay-card').style.display = "none";
-        }
-
-        function passarVez() {
-            fecharCarta();
-            jogo.turno = (jogo.turno + 1) % jogo.jogadores.length;
-            document.getElementById('roll-btn').innerText = "ROLAR DADOS";
-            document.getElementById('roll-btn').onclick = rolarDados;
-            document.getElementById('buy-btn').style.display = "none";
             render();
         }
 
         function comprarProp() {
-            let j = jogo.jogadores[jogo.turno]; let casa = TABULEIRO[j.pos];
-            if(j.saldo >= casa.p) { j.saldo -= casa.p; jogo.props[j.pos] = { dono: j.id, nivel: 0 }; }
-            document.getElementById('buy-btn').style.display = "none"; render();
+            let j = jogo.jogadores[jogo.turno];
+            let casa = TABULEIRO[j.pos];
+            let prop = jogo.props[j.pos];
+
+            if(!prop && j.saldo >= casa.p) {
+                j.saldo -= casa.p;
+                jogo.props[j.pos] = { dono: j.id, nivel: 0 };
+                playSfx(600, 0.2);
+            } else if(prop && j.saldo >= casa.b) {
+                j.saldo -= casa.b;
+                prop.nivel++;
+                playSfx(900, 0.2);
+            }
+            document.getElementById('buy-btn').style.display = "none";
+            render();
+        }
+
+        function mostrarCarta(tit, txt) {
+            document.getElementById('card-content').innerHTML = `<h2>${tit}</h2><p style='margin:10px'>${txt}</p>`;
+            document.getElementById('overlay-card').style.display = "block";
+        }
+
+        function fecharCarta() { document.getElementById('overlay-card').style.display = "none"; }
+
+        function passarVez() {
+            fecharCarta();
+            jogo.turno = (jogo.turno + 1) % jogo.jogadores.length;
+            const btn = document.getElementById('roll-btn');
+            btn.innerText = "ROLAR DADOS";
+            btn.onclick = rolarDados;
+            document.getElementById('buy-btn').style.display = "none";
+            render();
+        }
+
+        function emprestimo(idx) { 
+            jogo.jogadores[idx].saldo += 500; 
+            playSfx(1000, 0.1); 
+            render(); 
         }
 
         function render() {
             document.querySelectorAll('.pawn-grid').forEach(g => g.innerHTML = "");
-            jogo.jogadores.forEach((j, i) => {
+            document.querySelectorAll('.build-area').forEach(g => g.innerHTML = "");
+
+            jogo.jogadores.forEach(j => {
                 const p = document.createElement('div'); p.className = "pawn"; p.innerHTML = j.avatar;
                 document.getElementById(`pg-${j.pos}`).appendChild(p);
             });
+
             Object.keys(jogo.props).forEach(idx => {
-                document.getElementById(`tile-${idx}`).style.boxShadow = `inset 0 0 0 3px ${jogo.jogadores[jogo.props[idx].dono].cor}`;
+                const pr = jogo.props[idx];
+                const area = document.getElementById(`build-${idx}`);
+                area.innerHTML = pr.nivel === 5 ? "🏨" : "🏠".repeat(pr.nivel);
+                document.getElementById(`tile-${idx}`).style.background = "rgba(255,255,255,0.5)";
             });
+
             document.getElementById('sidebar').innerHTML = jogo.jogadores.map((j, i) => `
                 <div class="p-card ${jogo.turno === i ? 'active' : ''}">
-                    <b>${j.avatar} ${j.nome}</b><br>$${j.saldo}
-                </div>`).join('');
+                    <span style="font-size:20px">${j.avatar}</span> <b>${j.nome}</b><br>
+                    <span style="color:var(--primary); font-weight:800">$${j.saldo}</span>
+                    <button class="btn btn-loan" onclick="emprestimo(${i})">PEDIR $500</button>
+                </div>
+            `).join('');
         }
     </script>
 </body>
