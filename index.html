@@ -3,25 +3,243 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monopoly ULTRA</title>
-<link rel="stylesheet" href="style.css">
+<title>Monopoly Brasil ULTRA PRO</title>
+
+<style>
+:root{
+ --bg:#0b0e14;
+ --card:#1c222d;
+ --primary:#00eb84;
+ --text:#fff;
+}
+
+body{margin:0;font-family:Arial;background:var(--bg);color:var(--text)}
+
+#board{
+width:420px;height:420px;margin:10px auto;
+display:grid;grid-template-columns:repeat(11,1fr);
+grid-template-rows:repeat(11,1fr);
+border:4px solid #333;
+}
+
+.tile{border:1px solid #222;font-size:7px;display:flex;align-items:center;justify-content:center;position:relative}
+
+.player{width:10px;height:10px;border-radius:50%;position:absolute;bottom:2px}
+.house{position:absolute;top:2px;left:2px;font-size:10px}
+.hotel{position:absolute;top:2px;right:2px;font-size:12px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;padding:10px}
+
+.card{background:var(--card);padding:10px;border-radius:15px}
+
+button{padding:8px;border:none;border-radius:8px;background:var(--primary);cursor:pointer;margin:3px}
+
+#modal{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center}
+#modal-content{background:#111;padding:20px;border-radius:15px}
+
+</style>
 </head>
+
 <body>
 
-<h1>🎮 Monopoly ULTRA</h1>
-
-<div id="game">
-  <div id="board"></div>
-
-  <div id="panel">
-    <h2 id="turn"></h2>
-    <button onclick="rollDice()">🎲 Jogar</button>
-    <button onclick="buildHouse()">🏠 Construir</button>
-    <p id="money"></p>
-    <div id="log"></div>
-  </div>
+<div id="setup">
+<h2>MONOPOLY ULTRA</h2>
+<input id="money" type="number" value="1500"><br>
+<input id="name0" placeholder="Jogador 1"><br>
+<input id="name1" placeholder="Jogador 2"><br>
+<button onclick="start()">COMEÇAR</button>
 </div>
 
-<script src="script.js"></script>
+<div id="game" style="display:none">
+<div id="board"></div>
+<div class="grid" id="players"></div>
+</div>
+
+<div id="modal"><div id="modal-content"></div></div>
+
+<script>
+
+// ===== TABULEIRO =====
+const casas=[
+"GO","Sumaré","Sorte","Sé","Taxa","Estação","25 Março","Sorte","São João","Paulista",
+"Prisao","Vieira Souto","Água","Niterói","Atlântica","Estação","JK","Sorte","Berrini","Faria Lima",
+"Free","Ipanema","Sorte","Leblon","Copacabana","Estação","Cidade Jardim","Pacaembu","Luz","Ibirapuera",
+"Vá Prisão","Barra","Botânico","Sorte","Lagoa","Estação","Sorte","Morumbi","Taxa","Oscar Freire"
+];
+
+let tiles=casas.map(()=>({owner:null,houses:0,hotel:false}));
+
+let jogadores=[];
+let turno=0;
+
+// ===== BOARD =====
+function criarBoard(){
+let board=document.getElementById("board");
+board.innerHTML="";
+let grid=Array(121).fill(null);
+
+for(let i=0;i<11;i++) grid[110+i]=i;
+for(let i=0;i<11;i++) grid[110-(i*11)]=10+i;
+for(let i=0;i<11;i++) grid[i]=20+i;
+for(let i=0;i<11;i++) grid[(i*11)+10]=30+i;
+
+grid.forEach(pos=>{
+let d=document.createElement("div");
+d.className="tile";
+if(pos!==null){
+d.id="tile-"+pos;
+d.innerText=casas[pos];
+}
+board.appendChild(d);
+});
+}
+
+// ===== INIT =====
+function start(){
+jogadores=[
+{nome:document.getElementById("name0").value||"P1",saldo:1500,pos:0,cor:"red",jail:false,jailTurn:0,imoveis:[]},
+{nome:document.getElementById("name1").value||"P2",saldo:1500,pos:0,cor:"cyan",jail:false,jailTurn:0,imoveis:[]}
+];
+
+document.getElementById("setup").style.display="none";
+document.getElementById("game").style.display="block";
+
+criarBoard();
+render();
+}
+
+// ===== RENDER =====
+function render(){
+
+document.querySelectorAll(".player,.house,.hotel").forEach(e=>e.remove());
+
+jogadores.forEach(j=>{
+let el=document.createElement("div");
+el.className="player";
+el.style.background=j.cor;
+document.getElementById("tile-"+j.pos)?.appendChild(el);
+});
+
+tiles.forEach((t,i)=>{
+let tile=document.getElementById("tile-"+i);
+if(!tile) return;
+
+if(t.hotel){
+let h=document.createElement("div");
+h.className="hotel";
+h.innerText="🏨";
+tile.appendChild(h);
+}else if(t.houses>0){
+let h=document.createElement("div");
+h.className="house";
+h.innerText="🏠"+t.houses;
+tile.appendChild(h);
+}
+});
+
+renderPlayers();
+}
+
+// ===== UI PLAYERS =====
+function renderPlayers(){
+let html="";
+jogadores.forEach((j,i)=>{
+html+=`
+<div class="card">
+<b>${j.nome}</b><br>
+💰 ${j.saldo}<br>
+
+<button onclick="roll(${i})">🎲 Jogar</button>
+<button onclick="build(${i})">🏠 Construir</button>
+</div>
+`;
+});
+document.getElementById("players").innerHTML=html;
+}
+
+// ===== DADO =====
+function roll(i){
+if(i!==turno)return;
+
+let p=jogadores[i];
+
+if(p.jail){
+p.jailTurn++;
+if(p.jailTurn>=2){p.jail=false;p.jailTurn=0;}
+next();
+return;
+}
+
+let dice=Math.floor(Math.random()*6)+1;
+
+for(let x=0;x<dice;x++){
+setTimeout(()=>{
+p.pos=(p.pos+1)%40;
+render();
+},x*100);
+}
+
+setTimeout(()=>{
+acao(i);
+next();
+},dice*100+200);
+}
+
+// ===== AÇÕES =====
+function acao(i){
+let p=jogadores[i];
+let t=tiles[p.pos];
+
+// prisão
+if(p.pos===30){
+p.pos=10;
+p.jail=true;
+alert("Preso!");
+}
+
+// compra
+if(t.owner===null){
+if(confirm("Comprar "+casas[p.pos]+" por 200?")){
+p.saldo-=200;
+t.owner=i;
+p.imoveis.push(p.pos);
+}
+}
+
+// aluguel
+else if(t.owner!==i){
+let rent=50 + t.houses*40 + (t.hotel?100:0);
+p.saldo-=rent;
+jogadores[t.owner].saldo+=rent;
+}
+}
+
+// ===== CONSTRUIR =====
+function build(i){
+let p=jogadores[i];
+let t=tiles[p.pos];
+
+if(t.owner===i){
+if(!t.hotel){
+if(t.houses<4){
+t.houses++;
+p.saldo-=150;
+}else{
+t.houses=0;
+t.hotel=true;
+p.saldo-=300;
+}
+}
+render();
+}
+}
+
+// ===== TURNOS =====
+function next(){
+turno=(turno+1)%jogadores.length;
+}
+
+</script>
+
 </body>
 </html>
