@@ -8,75 +8,45 @@
     <style>
         :root {
             --bg: #0f172a; --panel: #1e293b; --gold: #fbbf24;
-            --p-color: #2ecc71;
+            --p0: #2ecc71; --p1: #e91e63; --p2: #3498db; --p3: #f1c40f;
         }
-
         * { box-sizing: border-box; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            margin: 0; background: var(--bg); color: white; height: 100vh; 
-            display: flex; flex-direction: column; overflow: hidden;
-        }
+        body { margin: 0; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* TELA DE SETUP */
+        /* TELA DE CONFIGURAÇÃO */
         #setup-screen {
             position: fixed; inset: 0; background: var(--bg); z-index: 2000;
             display: flex; flex-direction: column; padding: 20px; overflow-y: auto;
         }
-        .setup-card { background: var(--panel); padding: 15px; border-radius: 15px; margin-bottom: 10px; }
-        .player-input-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-        input { background: #334155; border: 1px solid #475569; color: white; padding: 8px; border-radius: 8px; flex: 1; }
-        select { background: #334155; color: white; padding: 8px; border-radius: 8px; border: none; }
+        .setup-card { background: var(--panel); padding: 15px; border-radius: 15px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .player-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        input, select { background: #334155; border: 1px solid #475569; color: white; padding: 10px; border-radius: 8px; flex: 1; font-size: 14px; }
+        .start-btn { background: var(--gold); color: #000; padding: 18px; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; margin-top: 10px; }
 
-        /* JOGO */
-        #status-bar { 
-            display: flex; gap: 8px; padding: 10px; overflow-x: auto; 
-            background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);
-            scrollbar-width: none;
-        }
-        .player-tab {
-            min-width: 90px; padding: 8px; background: var(--panel); border-radius: 12px;
-            text-align: center; border: 2px solid transparent; transition: 0.3s; flex-shrink: 0;
-        }
+        /* BARRA DE STATUS JOGADORES */
+        #status-bar { display: flex; gap: 8px; padding: 10px; overflow-x: auto; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); scrollbar-width: none; }
+        #status-bar::-webkit-scrollbar { display: none; }
+        .player-tab { min-width: 90px; padding: 8px; background: var(--panel); border-radius: 12px; text-align: center; border: 2px solid transparent; flex-shrink: 0; }
         .player-tab.active { border-color: var(--gold); transform: scale(1.05); }
         .mny { color: #2ecc71; font-weight: 900; font-size: 13px; }
 
+        /* TABULEIRO */
         .game-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 5px; }
         .board-container { position: relative; width: 95vw; height: 95vw; max-width: 450px; max-height: 450px; }
-        
-        #board { 
-            display: grid; width: 100%; height: 100%; 
-            grid-template-columns: 1.3fr repeat(9, 1fr) 1.3fr; 
-            grid-template-rows: 1.3fr repeat(9, 1fr) 1.3fr; 
-            background: #cbd5e1; border: 4px solid #000; border-radius: 4px;
-        }
-
+        #board { display: grid; width: 100%; height: 100%; grid-template-columns: 1.3fr repeat(9, 1fr) 1.3fr; grid-template-rows: 1.3fr repeat(9, 1fr) 1.3fr; background: #cbd5e1; border: 4px solid #000; border-radius: 4px; }
         .tile { background: white; border: 0.2px solid rgba(0,0,0,0.2); position: relative; display: flex; flex-direction: column; }
         .t-color { height: 20%; width: 100%; }
         .t-name { font-size: 5px; font-weight: 900; color: #000; text-align: center; text-transform: uppercase; flex: 1; display: flex; align-items: center; justify-content: center; padding: 1px; }
 
-        .pawn { 
-            position: absolute; width: 18px; height: 18px; z-index: 50; 
-            transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; font-size: 14px;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5));
-        }
+        /* PEÕES */
+        .pawn { position: absolute; width: 16px; height: 16px; z-index: 50; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
 
-        .controls { 
-            display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 10px; 
-            padding: 20px; background: var(--panel); border-radius: 20px 20px 0 0;
-        }
-        .btn-round { 
-            aspect-ratio: 1; border-radius: 50%; border: none; 
-            background: var(--gold); color: #000; font-weight: 900; font-size: 18px;
-            box-shadow: 0 4px 0 #b45309; cursor: pointer;
-        }
-        .btn-rect { border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; font-weight: 700; cursor: pointer; }
+        .controls { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 10px; padding: 15px; background: var(--panel); border-radius: 20px 20px 0 0; }
+        .btn-round { aspect-ratio: 1; border-radius: 50%; border: none; background: var(--gold); color: #000; font-weight: 900; font-size: 18px; box-shadow: 0 4px 0 #b45309; cursor: pointer; }
+        .btn-rect { border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: white; font-weight: 700; cursor: pointer; font-size: 12px; }
 
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 1000; backdrop-filter: blur(4px); }
-        .modal { 
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px;
-            background: white; color: #000; border-radius: 24px; padding: 25px; display: none; z-index: 1001; text-align: center;
-        }
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 320px; background: white; color: #000; border-radius: 24px; padding: 25px; display: none; z-index: 1001; text-align: center; }
         .action-btn { width: 100%; padding: 15px; margin-top: 8px; border-radius: 12px; border: none; font-weight: 900; cursor: pointer; }
     </style>
 </head>
@@ -85,8 +55,8 @@
 <div id="setup-screen">
     <h1 style="text-align: center; color: var(--gold);">MONOPOLY ELITE</h1>
     <div class="setup-card">
-        <label>Número de Jogadores:</label>
-        <select id="player-count" onchange="renderSetupInputs()" style="width: 100%; margin-top: 10px;">
+        <label style="display:block; margin-bottom:10px">Quantos jogadores?</label>
+        <select id="qt-players" onchange="createFields()">
             <option value="2">2 Jogadores</option>
             <option value="3">3 Jogadores</option>
             <option value="4">4 Jogadores</option>
@@ -96,8 +66,8 @@
             <option value="8">8 Jogadores</option>
         </select>
     </div>
-    <div id="player-configs"></div>
-    <button class="action-btn" style="background: var(--gold); color: black;" onclick="startGame()">COMEÇAR JOGO</button>
+    <div id="player-fields"></div>
+    <button class="start-btn" onclick="startGame()">COMEÇAR PARTIDA</button>
 </div>
 
 <div id="status-bar"></div>
@@ -106,7 +76,7 @@
     <div class="board-container">
         <div id="board">
             <div style="grid-column: 2/11; grid-row: 2/11; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #e2e8f0;">
-                <h1 style="color:#000; margin:0; font-size: 20px;">MONOPOLY</h1>
+                <h1 style="color:#000; margin:0; font-size: 22px;">MONOPOLY</h1>
                 <div id="dice" style="display:flex; gap:10px; margin-top:10px;">
                     <span id="d1" style="font-size:35px; color:#222">⚀</span>
                     <span id="d2" style="font-size:35px; color:#222">⚀</span>
@@ -118,9 +88,9 @@
 </div>
 
 <div class="controls">
-    <button class="btn-rect" onclick="alert('Trocas em breve!')">TROCAR</button>
+    <button class="btn-rect" onclick="alert('Trocas em breve')">IMÓVEIS</button>
     <button class="btn-round" id="roll-btn" onclick="roll()">GIRAR</button>
-    <button class="btn-rect" onclick="alert('Banco acessado!')">BANCO</button>
+    <button class="btn-rect" onclick="alert('Banco acessado')">BANCO</button>
 </div>
 
 <div id="overlay"></div>
@@ -131,19 +101,17 @@
 </div>
 
 <script>
-    // --- SONS (WEB AUDIO) ---
+    // --- SISTEMA DE SOM (WEB AUDIO) ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSound(freq, type, duration) {
+    function playSnd(f, type, d) {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = type;
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(f, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + d);
     }
 
     const COLORS = {
@@ -167,49 +135,34 @@
         {n: "SORTE", g: "luck"}, {n: "AV. MORUMBI", g: "azul_escuro", p: 350}, {n: "TAXA RIQUEZA", g: null}, {n: "RUA O. FREIRE", g: "azul_escuro", p: 400}
     ];
 
-    const avatares = ["🚗", "🚀", "🎩", "🦖", "🚢", "🐕", "🍕", "💎", "🐱", "🍩"];
-    let players = [];
-    let turn = 0;
+    const avatares = ["🚗", "🚀", "🎩", "🦖", "🚢", "🐕", "🍕", "💎"];
+    let players = [], turn = 0;
 
-    // --- SETUP ---
-    function renderSetupInputs() {
-        const count = document.getElementById('player-count').value;
-        const container = document.getElementById('player-configs');
+    function createFields() {
+        const n = document.getElementById('qt-players').value;
+        const container = document.getElementById('player-fields');
         container.innerHTML = "";
-        for(let i=0; i<count; i++) {
-            container.innerHTML += `
-                <div class="player-input-row">
-                    <input type="text" id="name-${i}" placeholder="Nome Jogador ${i+1}" value="P${i+1}">
-                    <select id="avatar-${i}">
-                        ${avatares.map(av => `<option value="${av}">${av}</option>`).join('')}
-                    </select>
-                </div>`;
+        for(let i=0; i<n; i++) {
+            container.innerHTML += `<div class="player-row">
+                <input type="text" id="n-${i}" value="Jogador ${i+1}">
+                <select id="a-${i}">${avatares.map(a => `<option>${a}</option>`).join('')}</select>
+            </div>`;
         }
     }
 
     function startGame() {
-        const count = document.getElementById('player-count').value;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const n = document.getElementById('qt-players').value;
         players = [];
-        for(let i=0; i<count; i++) {
-            players.push({
-                id: i, 
-                name: document.getElementById(`name-${i}`).value, 
-                icon: document.getElementById(`avatar-${i}`).value, 
-                money: 1500, 
-                pos: 0
-            });
+        for(let i=0; i<n; i++) {
+            players.push({id: i, name: document.getElementById(`n-${i}`).value, icon: document.getElementById(`a-${i}`).value, money: 1500, pos: 0});
         }
-        document.getElementById('setup-screen').style.display = 'none';
-        initBoard();
+        document.getElementById('setup-screen').style.display='none';
+        init();
     }
 
-    // --- GAME LOGIC ---
-    function initBoard() {
+    function init() {
         const b = document.getElementById('board');
-        // Limpa se houver algo
-        const existingTiles = b.querySelectorAll('.tile');
-        existingTiles.forEach(et => et.remove());
-
         TILES.forEach((t, i) => {
             const d = document.createElement('div');
             d.className = 'tile'; d.id = `t-${i}`;
@@ -217,12 +170,10 @@
             else if(i<=20){ d.style.gridColumn=1; d.style.gridRow=21-i; }
             else if(i<=30){ d.style.gridRow=1; d.style.gridColumn=i-19; }
             else { d.style.gridColumn=11; d.style.gridRow=i-29; }
-            
-            const color = COLORS[t.g] || 'transparent';
+            const color = COLORS[t.g] || (t.g==='luck'?'#f39c12':(t.g==='chest'?'#3498db':'transparent'));
             d.innerHTML = `<div class="t-color" style="background:${color}"></div><div class="t-name">${t.n}</div>`;
             b.appendChild(d);
         });
-
         players.forEach(p => {
             const el = document.createElement('div'); el.className='pawn'; el.id=`p-${p.id}`; el.innerText=p.icon;
             document.getElementById('pawns').appendChild(el);
@@ -233,24 +184,15 @@
     async function roll() {
         const p = players[turn];
         document.getElementById('roll-btn').disabled = true;
-        
-        // Som de dados
-        for(let i=0; i<6; i++) {
-            playSound(150 + (i*50), 'square', 0.05);
-            await new Promise(r => setTimeout(r, 50));
-        }
-
+        playSnd(200, 'square', 0.1);
         const d1 = Math.ceil(Math.random()*6), d2 = Math.ceil(Math.random()*6);
         document.getElementById('d1').innerText = ['⚀','⚁','⚂','⚃','⚄','⚅'][d1-1];
         document.getElementById('d2').innerText = ['⚀','⚁','⚂','⚃','⚄','⚅'][d2-1];
         
         for(let i=0; i<(d1+d2); i++) {
             p.pos = (p.pos + 1) % 40;
-            if(p.pos === 0) {
-                p.money += 200;
-                playSound(800, 'sine', 0.2); // Som de passar na largada
-            }
-            playSound(400, 'sine', 0.05); // Som de passo
+            if(p.pos === 0) { p.money += 200; playSnd(800, 'sine', 0.3); }
+            playSnd(400, 'sine', 0.05);
             updatePawns(); await new Promise(r => setTimeout(r, 200));
         }
         handleTile();
@@ -260,18 +202,14 @@
         const p = players[turn], t = TILES[p.pos];
         if(t.p > 0) {
             if(!t.owner) {
-                showModal(t.n, `Comprar por $${t.p}?`, [
-                    {t:"COMPRAR", c:"#2ecc71", f:()=>{ 
-                        p.money-=t.p; t.owner=p; 
-                        playSound(1200, 'sine', 0.1); 
-                        next(); 
-                    }},
+                showModal(t.n, `${p.name}, comprar por $${t.p}?`, [
+                    {t:"COMPRAR", c:"#2ecc71", f:()=>{ p.money-=t.p; t.owner=p; playSnd(1000, 'sine', 0.2); next(); }},
                     {t:"PASSAR", c:"#94a3b8", f:next}
                 ]);
             } else if(t.owner !== p) {
-                const rent = Math.floor(t.p * 0.2);
+                const rent = Math.floor(t.p * 0.15);
                 p.money -= rent; t.owner.money += rent;
-                playSound(200, 'sawtooth', 0.2); // Som de pagar
+                playSnd(150, 'sawtooth', 0.3);
                 showModal("ALUGUEL", `Pagou $${rent} para ${t.owner.name}`, [{t:"OK", c:"#e91e63", f:next}]);
             } else next();
         } else next();
@@ -281,8 +219,8 @@
         const bar = document.getElementById('status-bar');
         bar.innerHTML = players.map(p => `
             <div class="player-tab ${turn===p.id?'active':''}">
-                <div style="font-size:18px">${p.icon}</div>
-                <div style="font-size:10px">${p.name}</div>
+                <div style="font-size:16px">${p.icon}</div>
+                <div style="font-size:10px; opacity:0.8">${p.name}</div>
                 <div class="mny">$${p.money}</div>
             </div>`).join('');
     }
@@ -291,10 +229,10 @@
         players.forEach(p => {
             const t = document.getElementById(`t-${p.pos}`);
             const el = document.getElementById(`p-${p.id}`);
-            const offsetX = (p.id % 3) * 8;
-            const offsetY = Math.floor(p.id / 3) * 8;
-            el.style.top = (t.offsetTop + 2 + offsetY) + "px";
-            el.style.left = (t.offsetLeft + 2 + offsetX) + "px";
+            const offX = (p.id % 3) * 10;
+            const offY = Math.floor(p.id / 3) * 10;
+            el.style.top = (t.offsetTop + 2 + offY) + "px";
+            el.style.left = (t.offsetLeft + 2 + offX) + "px";
         });
     }
 
@@ -318,7 +256,7 @@
         updateUI();
     }
 
-    renderSetupInputs();
+    createFields();
 </script>
 </body>
 </html>
