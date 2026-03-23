@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monopoly Ultra Pro - Estável</title>
+    <title>Monopoly Ultra Pro - 8 Players</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -16,6 +16,7 @@
         /* Setup */
         #setup-screen { position: fixed; inset: 0; background: radial-gradient(circle, #1e293b 0%, #020617 100%); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .setup-card { background: var(--panel); padding: 25px; border-radius: 28px; width: 100%; max-width: 450px; border: 1px solid rgba(255,255,255,0.1); text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .setup-list { max-height: 200px; overflow-y: auto; margin: 15px 0; padding-right: 5px; }
         .player-row { display: flex; gap: 10px; margin-bottom: 8px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; align-items: center; }
         .player-row input { background: transparent; border: none; border-bottom: 1px solid #475569; color: white; flex: 1; outline: none; }
 
@@ -24,47 +25,45 @@
         .player-chip { min-width: 125px; background: #334155; padding: 10px; border-radius: 16px; border: 2px solid transparent; flex-shrink: 0; position: relative; }
         .player-chip.active { border-color: var(--accent); background: #475569; transform: scale(1.05); }
         .m-val { color: var(--success); font-weight: 800; font-size: 14px; }
-        .jail-tag { position: absolute; top: -5px; right: -5px; background: var(--danger); font-size: 9px; padding: 2px 6px; border-radius: 6px; font-weight: 800; }
 
         /* Board */
         .game-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        #board-wrapper { position: relative; width: 96vw; height: 96vw; max-width: 520px; max-height: 520px; background: #111; border-radius: 8px; padding: 3px; }
+        #board-wrapper { position: relative; width: 96vw; height: 96vw; max-width: 500px; max-height: 500px; background: #111; border-radius: 8px; padding: 3px; }
         #board { display: grid; width: 100%; height: 100%; grid-template-columns: 1.3fr repeat(9, 1fr) 1.3fr; grid-template-rows: 1.3fr repeat(9, 1fr) 1.3fr; background: #000; gap: 1px; }
 
         .tile { background: #f8fafc; position: relative; display: flex; flex-direction: column; color: #1e293b; font-size: 7px; overflow: hidden; }
         .t-color { height: 18%; width: 100%; border-bottom: 1px solid rgba(0,0,0,0.1); }
         .t-info { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2px; font-weight: 800; text-transform: uppercase; line-height: 1; }
         
-        .center-board { grid-area: 2/2/11/11; background: #e2ece3; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid rgba(0,0,0,0.05); }
-        .dice-box { display: flex; gap: 15px; margin-bottom: 10px; }
-        .die { width: 48px; height: 48px; background: white; color: black; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 32px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .center-board { grid-area: 2/2/11/11; background: #e2ece3; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .die { width: 45px; height: 45px; background: white; color: black; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 1px solid #ddd; }
 
         /* Peões */
-        .pawn { position: absolute; width: 20px; height: 20px; z-index: 100; transition: all 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.2); display: flex; align-items: center; justify-content: center; font-size: 16px; pointer-events: none; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .pawn { position: absolute; width: 18px; height: 18px; z-index: 100; transition: all 0.4s ease; display: flex; align-items: center; justify-content: center; font-size: 14px; pointer-events: none; }
 
         /* Controles */
-        .controls { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 10px; padding: 15px; background: #1e293b; border-top: 1px solid rgba(255,255,255,0.1); }
-        .btn { padding: 14px; border-radius: 14px; border: none; font-weight: 800; color: white; text-transform: uppercase; cursor: pointer; font-size: 11px; }
+        .controls { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 10px; padding: 15px; background: #1e293b; }
+        .btn { padding: 12px; border-radius: 12px; border: none; font-weight: 800; color: white; text-transform: uppercase; cursor: pointer; font-size: 11px; }
         .btn-roll { background: linear-gradient(135deg, var(--gold), #d97706); color: #451a03; font-size: 16px; }
-        .btn-roll:disabled { opacity: 0.5; filter: grayscale(1); }
-        .btn-util { background: rgba(255,255,255,0.1); }
+        .btn-roll:disabled { opacity: 0.5; }
 
         /* Modal */
         #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 3000; backdrop-filter: blur(4px); }
-        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 380px; background: white; color: #0f172a; border-radius: 24px; padding: 25px; display: none; z-index: 3001; text-align: center; }
-        .build-slots { position: absolute; top: 1px; left: 0; width: 100%; display: flex; justify-content: center; gap: 1px; }
-        .h-house { width: 5px; height: 5px; background: #15803d; border-radius: 1px; }
-        .h-hotel { width: 12px; height: 6px; background: #b91c1c; border-radius: 1px; }
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 350px; background: white; color: #0f172a; border-radius: 24px; padding: 25px; display: none; z-index: 3001; text-align: center; }
+        
+        .h-house { width: 5px; height: 5px; background: #15803d; display: inline-block; margin: 1px; }
+        .h-hotel { width: 12px; height: 6px; background: #b91c1c; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div id="setup-screen">
     <div class="setup-card">
-        <h1 style="color:var(--gold); margin:0; font-size: 28px;">MONOPOLY <span style="color:white">PRO</span></h1>
-        <p style="font-size: 12px; color: #94a3b8; margin: 5px 0 20px 0;">2 a 8 Jogadores</p>
-        <input type="number" id="p-count" min="2" max="8" value="2" onchange="initSetup()" style="width:100%; padding:10px; border-radius:8px; margin-bottom:15px; background:#0f172a; color:white; border:1px solid #475569;">
-        <div id="setup-list" style="max-height:220px; overflow-y:auto; margin-bottom:20px;"></div>
+        <h1 style="color:var(--gold); margin:0;">MONOPOLY <span style="color:white">PRO</span></h1>
+        <p style="font-size: 12px; color: #94a3b8; margin-bottom: 15px;">Selecione até 8 Jogadores</p>
+        <input type="range" id="p-count" min="2" max="8" value="2" oninput="initSetup()" style="width:100%; accent-color:var(--accent);">
+        <div id="p-label" style="font-weight:800; margin:10px 0;">2 JOGADORES</div>
+        <div id="setup-list" class="setup-list"></div>
         <button class="btn btn-roll" style="width:100%" onclick="startGame()">INICIAR PARTIDA</button>
     </div>
 </div>
@@ -75,27 +74,27 @@
     <div id="board-wrapper">
         <div id="board">
             <div class="center-board">
-                <div class="dice-box">
+                <div style="display:flex; gap:10px; margin-bottom:15px;">
                     <div id="die1" class="die">⚀</div>
                     <div id="die2" class="die">⚀</div>
                 </div>
-                <div id="status" style="font-weight:800; color:#475569; text-align:center; padding:0 15px;">AGUARDANDO...</div>
+                <div id="status" style="font-weight:800; color:#475569; text-align:center;">BOA SORTE!</div>
             </div>
         </div>
     </div>
 </div>
 
 <div class="controls">
-    <button class="btn btn-util" onclick="showAssets()">BENS</button>
+    <button class="btn" style="background:#475569" onclick="showAssets()">BENS</button>
     <button class="btn btn-roll" id="roll-btn" onclick="handleRoll()">JOGAR</button>
-    <button class="btn btn-util" onclick="showHistory()">LOG</button>
+    <button class="btn" style="background:#475569" onclick="alert('Log em tempo real ativo')">LOG</button>
 </div>
 
 <div id="overlay"></div>
 <div class="modal" id="modal">
-    <h2 id="m-title" style="margin-top:0;"></h2>
-    <div id="m-body" style="margin-bottom:20px; color:#475569;"></div>
-    <div id="m-footer" style="display:flex; flex-direction:column; gap:8px;"></div>
+    <h2 id="m-title"></h2>
+    <div id="m-body"></div>
+    <div id="m-footer" style="margin-top:20px; display:flex; flex-direction:column; gap:8px;"></div>
 </div>
 
 <script>
@@ -128,18 +127,18 @@
 
     function initSetup() {
         const n = document.getElementById('p-count').value;
-        const list = document.getElementById('setup-list');
-        list.innerHTML = "";
+        document.getElementById('p-label').innerText = n + " JOGADORES";
+        const list = document.getElementById('setup-list'); list.innerHTML = "";
         for(let i=0; i<n; i++) {
-            list.innerHTML += `<div class="player-row"><span>${ICONS[i]}</span><input id="p-n-${i}" value="Player ${i+1}"></div>`;
+            list.innerHTML += `<div class="player-row"><span>${ICONS[i]}</span><input id="p-n-${i}" value="Jogador ${i+1}"></div>`;
         }
     }
 
     function startGame() {
         const n = parseInt(document.getElementById('p-count').value);
-        players = []; // Limpa array para não duplicar
+        players = [];
         for(let i=0; i<n; i++) {
-            players.push({ id: i, name: document.getElementById(`p-n-${i}`).value, icon: ICONS[i], money: 1500, pos: 0, jail: 0, props: [], history: [] });
+            players.push({ id: i, name: document.getElementById(`p-n-${i}`).value, icon: ICONS[i], money: 1500, pos: 0, jail: 0, props: [] });
         }
         document.getElementById('setup-screen').style.display = 'none';
         renderBoard();
@@ -148,8 +147,6 @@
 
     function renderBoard() {
         const b = document.getElementById('board');
-        b.innerHTML = '<div class="center-board"><div class="dice-box"><div id="die1" class="die">⚀</div><div id="die2" class="die">⚀</div></div><div id="status" style="font-weight:800; color:#475569; text-align:center;">AGUARDANDO...</div></div>';
-        
         TILES.forEach((t, i) => {
             const d = document.createElement('div');
             d.className = 'tile'; d.id = `tile-${i}`;
@@ -158,16 +155,12 @@
             else if(i <= 30) d.style.gridArea = `1 / ${i-19}`;
             else d.style.gridArea = `${i-29} / 11`;
 
-            let html = `<div class="build-slots" id="build-${i}"></div>`;
+            let html = `<div id="build-${i}" style="position:absolute; top:1px; width:100%; text-align:center;"></div>`;
             if(t.g) html += `<div class="t-color" style="background:${COLORS[t.g]}"></div>`;
             html += `<div class="t-info">${t.n}</div>`;
-            if(t.p) html += `<div style="font-size:6px; text-align:center; padding-bottom:2px">M$ ${t.p}</div>`;
             d.innerHTML = html;
             b.appendChild(d);
         });
-
-        // Remove peões antigos antes de criar novos
-        document.querySelectorAll('.pawn').forEach(p => p.remove());
         players.forEach(p => {
             const pawn = document.createElement('div');
             pawn.className = 'pawn'; pawn.id = `pawn-${p.id}`; pawn.innerText = p.icon;
@@ -178,13 +171,11 @@
 
     async function handleRoll() {
         const p = players[turn];
-        const btn = document.getElementById('roll-btn');
-        btn.disabled = true;
+        document.getElementById('roll-btn').disabled = true;
 
-        // Lógica de Prisão Simplificada
         if(p.jail > 0) {
             p.jail--;
-            showModal("NA PRISÃO", `Você ainda tem ${p.jail + 1} turnos preso.`, [{t: "PULAR TURNO", c: "#000", f: nextTurn}]);
+            showModal("NA PRISÃO", `Aguarde mais ${p.jail+1} turnos.`, [{t: "PULAR VEZ", c: "#000", f: nextTurn}]);
             return;
         }
 
@@ -196,7 +187,7 @@
         let steps = d1 + d2;
         for(let i=0; i<steps; i++) {
             p.pos = (p.pos + 1) % 40;
-            if(p.pos === 0) { p.money += 200; }
+            if(p.pos === 0) p.money += 200;
             updatePawns();
             await new Promise(r => setTimeout(r, 120));
         }
@@ -205,15 +196,23 @@
         if(t.type === "gojail") {
             p.pos = 10; p.jail = 3; updatePawns();
             showModal("PRISÃO", "Vá direto para a prisão!", [{t: "OK", c: varDanger, f: nextTurn}]);
+        } else if(t.type === "tax") {
+            p.money -= t.val;
+            showModal(t.n, `Você pagou M$ ${t.val} de impostos.`, [{t: "PAGAR", c: "var(--danger)", f: nextTurn}]);
+        } else if(t.type === "luck" || t.type === "chest") {
+            const sorte = Math.random() > 0.5;
+            const valor = sorte ? 150 : -100;
+            p.money += valor;
+            showModal(t.type === "luck" ? "SORTE" : "COFRE", sorte ? `Parabéns! Você ganhou M$ ${valor}` : `Que azar! Perdeu M$ ${Math.abs(valor)}`, [{t: "OK", c: "var(--accent)", f: nextTurn}]);
         } else if(t.p && !t.owner) {
             showModal(t.n, `Comprar por M$ ${t.p}?`, [
                 {t: "COMPRAR", c: "var(--success)", f: () => { p.money -= t.p; t.owner = p; p.props.push(p.pos); nextTurn(); }},
                 {t: "PASSAR", c: "#94a3b8", f: nextTurn}
             ]);
         } else if(t.owner && t.owner !== p) {
-            let rent = t.houses ? t.r[t.houses] : t.r[0];
-            p.money -= rent; t.owner.money += rent;
-            showModal("ALUGUEL", `Pagou M$ ${rent} para ${t.owner.name}`, [{t: "PAGAR", c: "var(--danger)", f: nextTurn}]);
+            let aluguel = t.houses ? t.r[t.houses] : t.r[0];
+            p.money -= aluguel; t.owner.money += aluguel;
+            showModal("ALUGUEL", `Pagou M$ ${aluguel} para ${t.owner.name}`, [{t: "PAGAR", c: "var(--danger)", f: nextTurn}]);
         } else {
             nextTurn();
         }
@@ -231,7 +230,6 @@
         const h = document.getElementById('hud');
         h.innerHTML = players.map(p => `
             <div class="player-chip ${p.id===turn?'active':''}">
-                ${p.jail?`<span class="jail-tag">PRESO</span>`:''}
                 <div style="font-weight:800">${p.icon} ${p.name}</div>
                 <div class="m-val">M$ ${p.money}</div>
             </div>`).join('');
@@ -241,7 +239,6 @@
         players.forEach(p => {
             const tile = document.getElementById(`tile-${p.pos}`);
             const pawn = document.getElementById(`pawn-${p.id}`);
-            if(!tile || !pawn) return;
             const r = tile.getBoundingClientRect();
             const off = p.id * 3;
             pawn.style.top = (r.top + 8 + off) + "px";
@@ -251,13 +248,7 @@
 
     function showAssets() {
         const p = players[turn];
-        let txt = p.props.map(idx => {
-            const t = TILES[idx];
-            return `<div style="display:flex; justify-content:space-between; margin-bottom:5px; background:#f1f5f9; padding:8px; border-radius:8px">
-                <span>${t.n}</span>
-                <button onclick="build(${idx})" style="background:var(--success); border:none; color:white; border-radius:4px; padding:2px 8px">🏠</button>
-            </div>`;
-        }).join('') || "Nenhum bem.";
+        let txt = p.props.map(idx => `<div style="display:flex; justify-content:space-between; margin-bottom:10px; background:#f1f5f9; padding:10px; border-radius:10px;"><span>${TILES[idx].n}</span><button onclick="build(${idx})" style="background:var(--success); border:none; color:white; border-radius:5px; padding:5px;">🏠</button></div>`).join('') || "Sem propriedades.";
         showModal("MEUS BENS", txt, [{t: "FECHAR", c: "#0f172a", f: closeModal}]);
     }
 
@@ -286,7 +277,7 @@
     }
 
     function closeModal() { document.getElementById('overlay').style.display = 'none'; document.getElementById('modal').style.display = 'none'; }
-    function showHistory() { alert("Histórico de jogadas ativo."); }
+    
     window.onresize = updatePawns;
     initSetup();
 </script>
