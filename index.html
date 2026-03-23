@@ -3,78 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monopoly Brasil Pro - 8 Players</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Monopoly Ultra Brasil - 8 Players</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0f172a; --panel: #1e293b; --gold: #fbbf24;
-            --board-green: #cde6d0; --white: #ffffff;
-            --success: #22c55e; --danger: #ef4444; --info: #3b82f6;
+            --accent: #6366f1;
+            --bg-dark: #020617;
+            --panel: rgba(30, 41, 59, 0.7);
+            --gold: #fbbf24;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --board-green: #e2ece3;
         }
-        * { box-sizing: border-box; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; background: var(--bg); color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* Setup Screen */
-        #setup-screen { position: fixed; inset: 0; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .setup-card { background: var(--panel); padding: 30px; border-radius: 28px; width: 100%; max-width: 500px; border: 2px solid var(--gold); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .setup-header { text-align: center; margin-bottom: 20px; }
-        .setup-list { max-height: 350px; overflow-y: auto; margin: 15px 0; padding-right: 10px; }
-        .setup-list::-webkit-scrollbar { width: 5px; }
-        .setup-list::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-        
-        .player-row { display: flex; gap: 10px; margin-bottom: 12px; background: #334155; padding: 12px; border-radius: 15px; align-items: center; border: 1px solid transparent; transition: 0.3s; }
-        .avatar-select { font-size: 24px; background: #1e293b; padding: 5px 10px; border-radius: 10px; cursor: pointer; border: 1px solid #475569; }
-        .player-row input { background: transparent; border: none; border-bottom: 2px solid #475569; color: white; flex: 1; outline: none; font-size: 16px; padding: 5px; }
-        .player-row input:focus { border-color: var(--gold); }
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.2s ease; }
+        body { margin: 0; background: var(--bg-dark); color: white; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-        /* Game Elements */
-        .game-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; background: #020617; }
-        #board-wrapper { position: relative; width: 95vw; height: 95vw; max-width: 550px; max-height: 550px; background: #222; padding: 5px; border-radius: 10px; }
+        /* --- SETUP MODERNO --- */
+        #setup-screen { position: fixed; inset: 0; background: radial-gradient(circle at center, #1e293b 0%, #020617 100%); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .setup-card { background: var(--panel); padding: 30px; border-radius: 32px; width: 100%; max-width: 480px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(20px); box-shadow: 0 25px 50px rgba(0,0,0,0.5); text-align: center; }
+        .setup-list { max-height: 300px; overflow-y: auto; margin: 20px 0; padding-right: 10px; }
+        .player-row { display: flex; gap: 12px; margin-bottom: 10px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 16px; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
+        .player-row input { background: transparent; border: none; border-bottom: 2px solid #475569; color: white; flex: 1; outline: none; font-size: 16px; font-weight: 600; }
+        .player-row input:focus { border-color: var(--accent); }
+
+        /* --- HUD (CAPACIDADE 8 PLAYERS) --- */
+        #hud { display: flex; gap: 12px; padding: 15px; overflow-x: auto; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid rgba(255,255,255,0.1); scrollbar-width: none; }
+        #hud::-webkit-scrollbar { display: none; }
+        .player-chip { min-width: 130px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 20px; border: 2px solid transparent; flex-shrink: 0; position: relative; }
+        .player-chip.active { border-color: var(--accent); background: rgba(99, 102, 241, 0.2); transform: scale(1.05); box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
+        .money-text { color: #4ade80; font-weight: 800; font-size: 15px; margin-top: 5px; }
+        .jail-tag { position: absolute; top: -8px; right: 5px; background: var(--danger); font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 800; }
+
+        /* --- TABULEIRO --- */
+        .game-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        #board-wrapper { position: relative; width: 95vw; height: 95vw; max-width: 550px; max-height: 550px; background: #111; padding: 4px; border-radius: 12px; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
         #board { display: grid; width: 100%; height: 100%; grid-template-columns: 1.4fr repeat(9, 1fr) 1.4fr; grid-template-rows: 1.4fr repeat(9, 1fr) 1.4fr; background: #000; gap: 1px; }
 
-        .tile { background: #f8fafc; position: relative; display: flex; flex-direction: column; color: #000; font-size: 7px; overflow: hidden; }
-        .t-color { height: 20%; width: 100%; border-bottom: 1px solid #000; }
-        .t-info { flex: 1; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2px; font-weight: 700; text-transform: uppercase; line-height: 1; }
+        .tile { background: #f8fafc; position: relative; display: flex; flex-direction: column; color: #1e293b; font-size: 7px; overflow: hidden; }
+        .t-color { height: 20%; width: 100%; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .t-info { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2px; font-weight: 800; text-transform: uppercase; line-height: 1.1; }
+        .t-price { font-size: 6px; font-weight: 800; margin-bottom: 2px; opacity: 0.7; }
+
+        .center-area { grid-area: 2/2/11/11; background: var(--board-green); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(0,0,0,0.05); }
         
-        .pawn { position: absolute; width: 20px; height: 20px; z-index: 100; transition: all 0.4s ease-out; display: flex; align-items: center; justify-content: center; font-size: 16px; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4)); }
+        /* --- PEÕES E CONSTRUÇÕES --- */
+        .pawn { position: absolute; width: 22px; height: 22px; z-index: 100; transition: all 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28); display: flex; align-items: center; justify-content: center; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.4)); font-size: 18px; pointer-events: none; }
+        .build-slots { position: absolute; top: 1px; left: 0; width: 100%; display: flex; justify-content: center; gap: 1px; }
+        .h-house { width: 6px; height: 6px; background: #15803d; border-radius: 1px; }
+        .h-hotel { width: 14px; height: 7px; background: #b91c1c; border-radius: 1px; }
 
-        /* HUD */
-        #hud { display: flex; gap: 10px; padding: 12px; overflow-x: auto; background: #0f172a; border-bottom: 1px solid #334155; scrollbar-width: none; }
-        .player-chip { min-width: 130px; background: #1e293b; padding: 12px; border-radius: 18px; border: 2px solid transparent; flex-shrink: 0; transition: 0.3s; }
-        .player-chip.active { border-color: var(--gold); transform: scale(1.05); background: #334155; box-shadow: 0 0 15px rgba(251, 191, 36, 0.2); }
-        .money-text { color: #4ade80; font-weight: 900; font-size: 14px; margin-top: 4px; }
+        /* --- DADOS E CONTROLES --- */
+        .dice-container { display: flex; gap: 20px; margin-bottom: 15px; }
+        .die { width: 50px; height: 50px; background: white; color: black; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 34px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
 
-        /* Bottom Controls */
-        .controls { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 10px; padding: 15px; background: #1e293b; border-top: 1px solid #334155; }
-        .btn { padding: 15px; border-radius: 15px; border: none; font-weight: 900; color: white; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
-        .btn-roll { background: linear-gradient(to bottom, #fbbf24, #d97706); color: #000; font-size: 18px; box-shadow: 0 4px 0 #92400e; }
-        .btn-roll:active { transform: translateY(2px); box-shadow: 0 2px 0 #92400e; }
-        .btn-roll:disabled { opacity: 0.5; filter: grayscale(1); transform: none; box-shadow: none; }
-        .btn-util { background: #475569; font-size: 11px; }
+        .controls { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 15px; padding: 20px; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.1); }
+        .btn { padding: 15px; border-radius: 18px; border: none; font-weight: 800; color: white; text-transform: uppercase; cursor: pointer; letter-spacing: 0.5px; }
+        .btn-roll { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: #451a03; font-size: 18px; box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3); }
+        .btn-roll:disabled { opacity: 0.4; filter: grayscale(0.8); cursor: not-allowed; }
+        .btn-util { background: rgba(255,255,255,0.05); font-size: 11px; border: 1px solid rgba(255,255,255,0.1); }
 
-        /* Modals */
-        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; z-index: 1000; backdrop-filter: blur(5px); }
-        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: #f8fafc; color: #0f172a; border-radius: 30px; padding: 25px; display: none; z-index: 1001; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        /* --- MODAL MODERNO --- */
+        #overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; z-index: 3000; backdrop-filter: blur(8px); }
+        .modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 420px; background: white; color: #0f172a; border-radius: 32px; padding: 30px; display: none; z-index: 3001; text-align: center; }
+        .mortgage-badge { background: var(--danger); color: white; font-size: 9px; padding: 2px 5px; border-radius: 4px; margin-left: 5px; }
     </style>
 </head>
 <body>
 
 <div id="setup-screen">
     <div class="setup-card">
-        <div class="setup-header">
-            <h1 style="color:var(--gold); margin:0; font-size: 32px; font-weight: 900;">MONOPOLY</h1>
-            <p style="color:#94a3b8; font-size: 14px;">Selecione de 2 a 8 jogadores</p>
-        </div>
+        <h1 style="color:var(--gold); margin:0; font-size: 32px; font-weight: 800;">MONOPOLY</h1>
+        <p style="color:#94a3b8; font-size: 14px; margin-top: 5px;">Edição Profissional Brasil</p>
         
-        <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px; background:#334155; padding:15px; border-radius:15px;">
-            <span>👥 Jogadores:</span>
-            <input type="range" id="p-count" min="2" max="8" value="2" oninput="updateSetupList()" style="flex:1; accent-color:var(--gold);">
-            <b id="p-count-val" style="font-size:20px; color:var(--gold);">2</b>
+        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 20px; margin: 20px 0;">
+            <label style="font-size: 13px; color: #94a3b8;">Qtd. de Jogadores:</label>
+            <input type="range" id="p-count" min="2" max="8" value="2" oninput="initSetup()" style="width: 100%; accent-color: var(--accent); margin-top: 10px;">
+            <div id="p-count-display" style="font-size: 24px; font-weight: 800; color: var(--gold); margin-top: 5px;">2</div>
         </div>
 
         <div id="setup-list" class="setup-list"></div>
-        
-        <button class="btn btn-roll" style="width:100%; margin-top:10px;" onclick="startGame()">INICIAR PARTIDA</button>
+        <button class="btn btn-roll" style="width:100%" onclick="startGame()">INICIAR PARTIDA</button>
     </div>
 </div>
 
@@ -83,12 +92,12 @@
 <div class="game-container">
     <div id="board-wrapper">
         <div id="board">
-            <div style="grid-area: 2/2/11/11; background: var(--board-green); display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #a3b8a5;">
-                <div id="dice-area" style="display:flex; gap:15px; margin-bottom:15px;">
-                    <div id="die1" style="width:55px; height:55px; background:white; color:black; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:35px; box-shadow: 0 4px 0 #cbd5e1; border: 1px solid #ddd;">⚀</div>
-                    <div id="die2" style="width:55px; height:55px; background:white; color:black; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:35px; box-shadow: 0 4px 0 #cbd5e1; border: 1px solid #ddd;">⚀</div>
+            <div class="center-area">
+                <div class="dice-container">
+                    <div id="die1" class="die">⚀</div>
+                    <div id="die2" class="die">⚀</div>
                 </div>
-                <div id="game-status" style="color:#1e293b; font-weight:900; font-size:16px; text-transform:uppercase; text-align:center;">Aguardando...</div>
+                <div id="game-status" style="font-weight: 800; color: #334155; text-align: center; max-width: 80%;">PREPARANDO TABULEIRO...</div>
             </div>
         </div>
     </div>
@@ -97,165 +106,239 @@
 <div class="controls">
     <button class="btn btn-util" onclick="showAssets()">MEUS BENS</button>
     <button class="btn btn-roll" id="roll-btn" onclick="handleRoll()">JOGAR</button>
-    <button class="btn btn-util" onclick="showHistory()">LOG</button>
+    <button class="btn btn-util" onclick="showHistory()">HISTÓRICO</button>
 </div>
 
 <div id="overlay"></div>
 <div class="modal" id="modal">
-    <h2 id="m-title" style="margin:0 0 15px 0; font-weight: 900;"></h2>
-    <div id="m-body" style="margin-bottom: 20px; line-height: 1.5;"></div>
+    <h2 id="m-title" style="margin:0 0 10px 0; font-weight: 800;"></h2>
+    <div id="m-body" style="margin-bottom: 25px; line-height: 1.6; color: #475569;"></div>
     <div id="m-footer" style="display:flex; flex-direction:column; gap:10px;"></div>
 </div>
 
 <script>
+    // --- DADOS DO TABULEIRO (BASEADOS NO SEU ARQUIVO) ---
     const TILES = [
-        {n: "PARTIDA", type: "go"}, {n: "AV. SUMARÉ", p: 60, r: 2}, {n: "COFRE", type: "chest"}, {n: "AV. SÃO JOÃO", p: 60, r: 4},
-        {n: "IMPOSTO", type: "tax", val: 200}, {n: "EST. MARACANÃ", p: 200}, {n: "RUA 25 MARÇO", p: 100, r: 6}, {n: "SORTE", type: "luck"},
-        {n: "AV. PAULISTA", p: 100, r: 6}, {n: "AV. VIEIRA SOUTO", p: 120, r: 8}, {n: "PRISÃO", type: "jail"}, {n: "AV. ATLÂNTICA", p: 140, r: 10},
-        {n: "CIA ELÉTRICA", p: 150}, {n: "AV. NITERÓI", p: 140, r: 10}, {n: "AV. FARIA LIMA", p: 160, r: 12}, {n: "EST. CARIOCA", p: 200},
-        {n: "AV. BERRINI", p: 180, r: 14}, {n: "COFRE", type: "chest"}, {n: "AV. PRES. JK", p: 180, r: 14}, {n: "AV. 9 JULHO", p: 200, r: 16},
-        {n: "GRÁTIS", type: "free"}, {n: "AV. EUROPA", p: 220, r: 18}, {n: "SORTE", type: "luck"}, {n: "AV. AUGUSTA", p: 220, r: 18},
-        {n: "AV. PACAEMBU", p: 240, r: 20}, {n: "EST. CONSOLAÇÃO", p: 200}, {n: "INTERLAGOS", p: 260, r: 22}, {n: "MORUMBI", p: 260, r: 22},
-        {n: "CIA ÁGUA", p: 150}, {n: "IBIRAPUERA", p: 280, r: 24}, {n: "VÁ P/ PRISÃO", type: "gojail"}, {n: "BARRA", p: 300, r: 26},
-        {n: "JARDIM BOTÂNICO", p: 300, r: 26}, {n: "COFRE", type: "chest"}, {n: "IPANEMA", p: 320, r: 28}, {n: "EST. REPÚBLICA", p: 200},
-        {n: "SORTE", type: "luck"}, {n: "LEBLON", p: 350, r: 35}, {n: "TAXA RIQUEZA", type: "tax", val: 100}, {n: "AV. OCEÂNICA", p: 400, r: 50}
+        {n: "PARTIDA", type: "go"},
+        {n: "AV. SUMARÉ", type: "prop", g: "brown", p: 60, r: [2, 10, 30, 90, 160, 250], h: 50},
+        {n: "COFRE", type: "chest"},
+        {n: "AV. SÃO JOÃO", type: "prop", g: "brown", p: 60, r: [4, 20, 60, 180, 320, 450], h: 50},
+        {n: "IMPOSTO", type: "tax", val: 200},
+        {n: "EST. MARACANÃ", type: "station", p: 200, icon: "🚆"},
+        {n: "RUA 25 MARÇO", type: "prop", g: "lblue", p: 100, r: [6, 30, 90, 270, 400, 550], h: 50},
+        {n: "SORTE", type: "luck"},
+        {n: "AV. PAULISTA", type: "prop", g: "lblue", p: 100, r: [6, 30, 90, 270, 400, 550], h: 50},
+        {n: "AV. VIEIRA SOUTO", type: "prop", g: "lblue", p: 120, r: [8, 40, 100, 300, 450, 600], h: 50},
+        {n: "PRISÃO", type: "jail"},
+        {n: "AV. ATLÂNTICA", type: "prop", g: "pink", p: 140, r: [10, 50, 150, 450, 625, 750], h: 100},
+        {n: "CIA ELÉTRICA", type: "util", p: 150, icon: "💡"},
+        {n: "AV. NITERÓI", type: "prop", g: "pink", p: 140, r: [10, 50, 150, 450, 625, 750], h: 100},
+        {n: "AV. FARIA LIMA", type: "prop", g: "pink", p: 160, r: [12, 60, 180, 500, 700, 900], h: 100},
+        {n: "EST. CARIOCA", type: "station", p: 200, icon: "🚆"},
+        {n: "AV. BERRINI", type: "prop", g: "orange", p: 180, r: [14, 70, 200, 550, 750, 950], h: 100},
+        {n: "COFRE", type: "chest"},
+        {n: "AV. PRES. JK", type: "prop", g: "orange", p: 180, r: [14, 70, 200, 550, 750, 950], h: 100},
+        {n: "AV. 9 JULHO", type: "prop", g: "orange", p: 200, r: [16, 80, 220, 600, 800, 1000], h: 100},
+        {n: "CENTRO", type: "free"},
+        {n: "AV. EUROPA", type: "prop", g: "red", p: 220, r: [18, 90, 250, 700, 875, 1050], h: 150},
+        {n: "SORTE", type: "luck"},
+        {n: "AV. AUGUSTA", type: "prop", g: "red", p: 220, r: [18, 90, 250, 700, 875, 1050], h: 150},
+        {n: "AV. PACAEMBU", type: "prop", g: "red", p: 240, r: [20, 100, 300, 750, 925, 1100], h: 150},
+        {n: "EST. CONSOLAÇÃO", type: "station", p: 200, icon: "🚆"},
+        {n: "INTERLAGOS", type: "prop", g: "yellow", p: 260, r: [22, 110, 330, 800, 975, 1150], h: 150},
+        {n: "MORUMBI", type: "prop", g: "yellow", p: 260, r: [22, 110, 330, 800, 975, 1150], h: 150},
+        {n: "CIA ÁGUA", type: "util", p: 150, icon: "🚰"},
+        {n: "IBIRAPUERA", type: "prop", g: "yellow", p: 280, r: [24, 120, 360, 850, 1025, 1200], h: 150},
+        {n: "VÁ P/ PRISÃO", type: "gojail"},
+        {n: "BARRA", type: "prop", g: "green", p: 300, r: [26, 130, 390, 900, 1100, 1275], h: 200},
+        {n: "JARDIM BOTÂNICO", type: "prop", g: "green", p: 300, r: [26, 130, 390, 900, 1100, 1275], h: 200},
+        {n: "COFRE", type: "chest"},
+        {n: "IPANEMA", type: "prop", g: "green", p: 320, r: [28, 150, 450, 1000, 1200, 1400], h: 200},
+        {n: "EST. REPÚBLICA", type: "station", p: 200, icon: "🚆"},
+        {n: "SORTE", type: "luck"},
+        {n: "LEBLON", type: "prop", g: "blue", p: 350, r: [35, 175, 500, 1100, 1300, 1500], h: 200},
+        {n: "TAXA RIQUEZA", type: "tax", val: 100},
+        {n: "AV. OCEÂNICA", type: "prop", g: "blue", p: 400, r: [50, 200, 600, 1400, 1700, 2000], h: 200}
     ];
 
-    const AVATARS = ["🎩", "🚗", "🐕", "🚀", "🏎️", "🚢", "👟", "🐱"];
-    let players = [], turn = 0;
+    const COLORS = { brown: "#78350f", lblue: "#7dd3fc", pink: "#db2777", orange: "#f97316", red: "#ef4444", yellow: "#facc15", green: "#15803d", blue: "#1e40af" };
+    const ICONS = ["🎩","🚗","🐕","🚀","🏎️","🚢","👟","🐱"];
+    
+    let players = [], turn = 0, doublesCount = 0;
 
-    function updateSetupList() {
-        const count = document.getElementById('p-count').value;
-        document.getElementById('p-count-val').innerText = count;
+    // --- SETUP ---
+    function initSetup() {
+        const n = document.getElementById('p-count').value;
+        document.getElementById('p-count-display').innerText = n;
         const list = document.getElementById('setup-list');
-        list.innerHTML = '';
-        
-        for (let i = 0; i < count; i++) {
+        list.innerHTML = "";
+        for(let i=0; i<n; i++) {
             list.innerHTML += `
-                <div class="player-row" id="row-${i}">
-                    <div class="avatar-select" id="avatar-${i}">${AVATARS[i]}</div>
-                    <input type="text" id="name-${i}" placeholder="Nome do Jogador ${i+1}" value="Jogador ${i+1}">
+                <div class="player-row">
+                    <span style="font-size:24px">${ICONS[i]}</span>
+                    <input id="p-name-${i}" value="Jogador ${i+1}" maxlength="12">
                 </div>`;
         }
     }
-    updateSetupList();
 
     function startGame() {
-        const count = document.getElementById('p-count').value;
-        players = [];
-        for (let i = 0; i < count; i++) {
+        const n = parseInt(document.getElementById('p-count').value);
+        for(let i=0; i<n; i++) {
             players.push({
-                id: i, 
-                name: document.getElementById(`name-${i}`).value || `Jogador ${i+1}`,
-                avatar: AVATARS[i],
-                money: 1500, pos: 0, props: [], jail: 0
+                id: i, name: document.getElementById(`p-name-${i}`).value,
+                icon: ICONS[i], money: 1500, pos: 0, jailTurns: 0, props: [], history: ["Partida iniciada"]
             });
         }
         document.getElementById('setup-screen').style.display = 'none';
         renderBoard();
         updateUI();
+        document.getElementById('game-status').innerText = `Vez de ${players[0].name}`;
     }
 
     function renderBoard() {
-        const board = document.getElementById('board');
+        const b = document.getElementById('board');
         TILES.forEach((t, i) => {
-            const tile = document.createElement('div');
-            tile.className = 'tile'; tile.id = `tile-${i}`;
-            if(i <= 10) tile.style.gridArea = `11 / ${11-i}`;
-            else if(i <= 20) tile.style.gridArea = `${21-i} / 1`;
-            else if(i <= 30) tile.style.gridArea = `1 / ${i-19}`;
-            else tile.style.gridArea = `${i-29} / 11`;
+            const d = document.createElement('div');
+            d.className = 'tile'; d.id = `tile-${i}`;
+            
+            // Grid Position
+            if(i <= 10) d.style.gridArea = `11 / ${11-i}`;
+            else if(i <= 20) d.style.gridArea = `${21-i} / 1`;
+            else if(i <= 30) d.style.gridArea = `1 / ${i-19}`;
+            else d.style.gridArea = `${i-29} / 11`;
 
-            tile.innerHTML = `<div class="t-info">${t.n}</div>`;
-            board.appendChild(tile);
+            let html = `<div class="build-slots" id="build-${i}"></div>`;
+            if(t.g) html += `<div class="t-color" style="background:${COLORS[t.g]}"></div>`;
+            html += `<div class="t-info">${t.n}${t.icon?`<div style="font-size:12px">${t.icon}</div>`:''}</div>`;
+            if(t.p) html += `<div class="t-price">M$ ${t.p}</div>`;
+            
+            d.innerHTML = html;
+            b.appendChild(d);
         });
 
         players.forEach(p => {
             const pawn = document.createElement('div');
-            pawn.className = 'pawn'; pawn.id = `pawn-${p.id}`;
-            pawn.innerText = p.avatar;
+            pawn.className = 'pawn'; pawn.id = `pawn-${p.id}`; pawn.innerText = p.icon;
             document.body.appendChild(pawn);
         });
         updatePawns();
     }
 
+    // --- LÓGICA DE JOGO ---
     async function handleRoll() {
         const p = players[turn];
-        if(p.jail > 0) {
-            p.jail--;
-            alert(`${p.name} está na prisão! Faltam ${p.jail} turnos.`);
-            nextTurn(); return;
-        }
-
         document.getElementById('roll-btn').disabled = true;
+
         const d1 = Math.floor(Math.random()*6)+1, d2 = Math.floor(Math.random()*6)+1;
         const diceChars = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
         document.getElementById('die1').innerText = diceChars[d1];
         document.getElementById('die2').innerText = diceChars[d2];
 
+        const isDouble = (d1 === d2);
+        if(isDouble) doublesCount++; else doublesCount = 0;
+
+        if(doublesCount === 3) { goToJail(p, "3 Duplos!"); return; }
+
+        if(p.jailTurns > 0) {
+            if(isDouble) { p.jailTurns = 0; log(p, "Saiu da Prisão!"); }
+            else { 
+                p.jailTurns--; 
+                if(p.jailTurns === 0) { p.money -= 50; log(p, "Pagou M$ 50 para sair."); }
+                else { log(p, "Continua preso"); setTimeout(nextTurn, 1000); return; }
+            }
+        }
+
         let steps = d1 + d2;
-        for(let i=0; i < steps; i++) {
+        for(let i=0; i<steps; i++) {
             p.pos = (p.pos + 1) % 40;
-            if(p.pos === 0) p.money += 200;
+            if(p.pos === 0) { p.money += 200; log(p, "Passou pelo Início (+200)"); }
             updatePawns();
             await new Promise(r => setTimeout(r, 150));
         }
-        
-        const tile = TILES[p.pos];
-        if(tile.type === "gojail") {
-            p.pos = 10; p.jail = 3;
-            updatePawns();
-            alert("VÁ PARA A PRISÃO!");
-        } else if(tile.p && !tile.owner) {
-            if(confirm(`${p.name}, deseja comprar ${tile.n} por M$ ${tile.p}?`)) {
-                p.money -= tile.p; tile.owner = p; p.props.push(tile.n);
-            }
+        processTile(steps);
+    }
+
+    function processTile(dice) {
+        const p = players[turn];
+        const t = TILES[p.pos];
+        updateUI();
+
+        if(t.type === "gojail") goToJail(p, "Vá para a Prisão!");
+        else if(t.p) {
+            if(!t.owner) {
+                showModal(t.n, `Comprar por M$ ${t.p}?`, [
+                    {t: "COMPRAR", c: "var(--success)", f: () => buyProp(p, t)},
+                    {t: "PASSAR", c: "#94a3b8", f: checkDoubleTurn}
+                ]);
+            } else if(t.owner !== p && !t.mortgaged) {
+                let rent = calcRent(t, dice);
+                p.money -= rent; t.owner.money += rent;
+                log(p, `Pagou M$ ${rent} para ${t.owner.name}`);
+                showModal("ALUGUEL", `Você pagou M$ ${rent} de aluguel.`, [{t: "OK", c: "var(--danger)", f: checkDoubleTurn}]);
+            } else checkDoubleTurn();
+        } else if(t.type === "tax") {
+            p.money -= t.val; log(p, `Pagou taxa: M$ ${t.val}`);
+            showModal(t.n, `Taxa obrigatória: M$ ${t.val}`, [{t: "PAGAR", c: "#000", f: checkDoubleTurn}]);
+        } else if(t.type === "luck" || t.type === "chest") {
+            const v = (Math.random() > 0.5 ? 100 : -100);
+            p.money += v;
+            showModal("SORTE/COFRE", v > 0 ? `Ganhou M$ ${v}` : `Perdeu M$ ${Math.abs(v)}`, [{t: "OK", c: varAccent, f: checkDoubleTurn}]);
+        } else checkDoubleTurn();
+    }
+
+    function calcRent(t, dice) {
+        if(t.type === "station") {
+            const count = t.owner.props.filter(i => TILES[i].type === "station").length;
+            return 25 * Math.pow(2, count - 1);
         }
-        
-        updateUI();
-        nextTurn();
+        if(t.type === "util") {
+            const count = t.owner.props.filter(i => TILES[i].type === "util").length;
+            return dice * (count === 2 ? 10 : 4);
+        }
+        return t.houses ? t.r[t.houses] : t.r[0];
     }
 
-    function nextTurn() {
-        turn = (turn + 1) % players.length;
-        document.getElementById('roll-btn').disabled = false;
-        document.getElementById('game-status').innerText = `Vez de: ${players[turn].name}`;
-        updateUI();
+    function buyProp(p, t) {
+        if(p.money >= t.p) { p.money -= t.p; t.owner = p; p.props.push(p.pos); log(p, `Comprou ${t.n}`); checkDoubleTurn(); }
+        else alert("Saldo insuficiente!");
     }
 
-    function updateUI() {
-        const hud = document.getElementById('hud');
-        hud.innerHTML = '';
-        players.forEach((p, i) => {
-            hud.innerHTML += `
-                <div class="player-chip ${turn === i ? 'active' : ''}">
-                    <div style="font-weight:700">${p.avatar} ${p.name}</div>
-                    <div class="money-text">M$ ${p.money}</div>
-                </div>`;
+    function goToJail(p, msg) { p.pos = 10; p.jailTurns = 3; updatePawns(); log(p, msg); showModal("PRISÃO", msg, [{t: "OK", c: "var(--danger)", f: nextTurn}]); }
+
+    function checkDoubleTurn() { closeModal(); if(doublesCount > 0 && doublesCount < 3) { document.getElementById('roll-btn').disabled = false; } else nextTurn(); }
+
+    function nextTurn() { closeModal(); doublesCount = 0; turn = (turn + 1) % players.length; document.getElementById('roll-btn').disabled = false; document.getElementById('game-status').innerText = `Vez de ${players[turn].name}`; updateUI(); }
+
+    // --- FINANCEIRO ---
+    function showAssets() {
+        const p = players[turn];
+        let h = `<div style="text-align:left">Saldo: <b>M$ ${p.money}</b><hr>`;
+        p.props.forEach(idx => {
+            const t = TILES[idx];
+            h += `<div style="display:flex; justify-content:space-between; padding:10px; background:#f8fafc; border-radius:12px; margin-bottom:8px; border:1px solid #e2e8f0">
+                    <div style="font-size:12px"><b>${t.n}</b>${t.mortgaged?' <span class="mortgage-badge">HIPOT.</span>':''}</div>
+                    <div>
+                        ${(t.g && !t.mortgaged)?`<button onclick="buildHouse(${idx})" style="background:var(--success); border:none; color:white; border-radius:5px; padding:4px 8px">🏠</button>`:''}
+                        <button onclick="toggleMortgage(${idx})" style="background:#64748b; border:none; color:white; border-radius:5px; padding:4px 8px">${t.mortgaged?'🔓':'🏦'}</button>
+                    </div>
+                  </div>`;
         });
+        showModal("PATRIMÔNIO", h || "Nenhuma propriedade.", [{t: "VOLTAR", c: "#0f172a", f: closeModal}]);
     }
 
+    function buildHouse(idx) {
+        const p = players[turn]; const t = TILES[idx];
+        if((t.houses || 0) < 5 && p.money >= t.h) { p.money -= t.h; t.houses = (t.houses || 0) + 1; updateVisualBuilds(); updateUI(); showAssets(); }
+    }
+
+    function toggleMortgage(idx) {
+        const p = players[turn]; const t = TILES[idx];
+        if(!t.mortgaged) { t.mortgaged = true; p.money += (t.p / 2); }
+        else { let cost = Math.floor((t.p / 2) * 1.1); if(p.money >= cost) { p.money -= cost; t.mortgaged = false; } }
+        updateUI(); showAssets();
+    }
+
+    // --- RENDERIZADORES ---
     function updatePawns() {
         players.forEach(p => {
-            const tile = document.getElementById(`tile-${p.pos}`);
-            const rect = tile.getBoundingClientRect();
-            const pawn = document.getElementById(`pawn-${p.id}`);
-            
-            // Lógica de offset para múltiplos jogadores na mesma casa
-            const row = Math.floor(p.id / 3);
-            const col = p.id % 3;
-            const offsetX = col * 12;
-            const offsetY = row * 12;
-
-            pawn.style.left = (rect.left + 5 + offsetX) + 'px';
-            pawn.style.top = (rect.top + 5 + offsetY) + 'px';
-        });
-    }
-
-    function showAssets() { alert(`${players[turn].name} possui: \n${players[turn].props.join(", ") || "Nenhum bem"}`); }
-    function showHistory() { alert("Histórico de jogadas: Simulação Pro ativada."); }
-
-    window.onresize = updatePawns;
-</script>
-</body>
-</html>
+            const tile = docu
