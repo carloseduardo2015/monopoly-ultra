@@ -341,4 +341,43 @@
     // --- RENDERIZADORES ---
     function updatePawns() {
         players.forEach(p => {
-            const tile = docu
+            const tile = document.getElementById(`tile-${p.pos}`);
+            const pawn = document.getElementById(`pawn-${p.id}`);
+            const rect = tile.getBoundingClientRect();
+            // Lógica de Grid 3x3 para os peões na mesma casa
+            const row = Math.floor(p.id / 3);
+            const col = p.id % 3;
+            pawn.style.top = (rect.top + 6 + (row * 10)) + "px";
+            pawn.style.left = (rect.left + 6 + (col * 10)) + "px";
+        });
+    }
+
+    function updateVisualBuilds() {
+        TILES.forEach((t, i) => {
+            const area = document.getElementById(`build-${i}`);
+            if(!area) return; area.innerHTML = "";
+            if(t.houses === 5) area.innerHTML = '<div class="h-hotel"></div>';
+            else for(let x=0; x<(t.houses||0); x++) area.innerHTML += '<div class="h-house"></div>';
+        });
+    }
+
+    function updateUI() {
+        const hud = document.getElementById('hud');
+        hud.innerHTML = players.map(p => `
+            <div class="player-chip ${p.id===turn?'active':''}">
+                ${p.jailTurns?`<span class="jail-tag">PRESO</span>`:''}
+                <div style="font-weight:800; font-size:14px">${p.icon} ${p.name}</div>
+                <div class="money-text">M$ ${p.money}</div>
+            </div>`).join('');
+    }
+
+    function log(p, m) { p.history.push(m); updateUI(); }
+    function showHistory() { showModal("HISTÓRICO", players[turn].history.slice(-10).reverse().join("<br>• "), [{t: "VOLTAR", c: "#000", f: closeModal}]); }
+    function showModal(t, b, btns) { document.getElementById('m-title').innerText = t; document.getElementById('m-body').innerHTML = b; const f = document.getElementById('m-footer'); f.innerHTML = ""; btns.forEach(btn => { const bEl = document.createElement('button'); bEl.className = 'btn'; bEl.style.background = btn.c; bEl.innerText = btn.t; bEl.onclick = btn.f; f.appendChild(bEl); }); document.getElementById('overlay').style.display = 'block'; document.getElementById('modal').style.display = 'block'; }
+    function closeModal() { document.getElementById('overlay').style.display = 'none'; document.getElementById('modal').style.display = 'none'; }
+    
+    window.onresize = updatePawns;
+    initSetup();
+</script>
+</body>
+</html>
