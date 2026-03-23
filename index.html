@@ -178,7 +178,7 @@
     function startGame() {
         const n = parseInt(document.getElementById('p-count').value);
         const icons = ["🎩","🚗","🐕","🚀","🏎️","🚢","👟","🐱"];
-        players = [];
+        players = []; // Reset para novo jogo
         for(let i=0; i<n; i++) {
             players.push({
                 id: i, name: document.getElementById(`p-name-${i}`).value,
@@ -193,10 +193,9 @@
 
     function renderBoard() {
         const b = document.getElementById('board');
-        // Limpa o tabuleiro antes de renderizar (exceto a área central)
-        const items = b.querySelectorAll('.tile');
-        items.forEach(item => item.remove());
-        
+        const tilesHtml = b.querySelectorAll('.tile');
+        tilesHtml.forEach(el => el.remove());
+
         TILES.forEach((t, i) => {
             const d = document.createElement('div');
             d.className = 'tile'; d.id = `tile-${i}`;
@@ -255,6 +254,7 @@
                 if(p.jailTurns === 0) {
                     p.money -= 50;
                     log(p, "Cumpriu pena e pagou M$ 50.");
+                    if(checkBankruptcy(p)) return;
                 } else {
                     log(p, `Preso (${p.jailTurns} rodadas restantes)`);
                     setTimeout(nextTurn, 1000);
@@ -290,15 +290,63 @@
                 let rent = calcRent(t, dice);
                 p.money -= rent; t.owner.money += rent;
                 log(p, `Pagou M$ ${rent} para ${t.owner.name}`);
-                showModal("ALUGUEL", `Pagou M$ ${rent} para ${t.owner.name}`, [{t: "PAGAR", c: "var(--danger)", f: checkDoubleTurn}]);
+                if (!checkBankruptcy(p)) {
+                    showModal("ALUGUEL", `Pagou M$ ${rent} para ${t.owner.name}`, [{t: "PAGAR", c: "var(--danger)", f: checkDoubleTurn}]);
+                }
             } else checkDoubleTurn();
         } else if(t.type === "tax") {
             p.money -= t.val;
             log(p, `Pagou ${t.n} (M$ ${t.val})`);
-            showModal(t.n, `Taxa obrigatória: M$ ${t.val}`, [{t: "PAGAR", c: "#000", f: checkDoubleTurn}]);
+            if (!checkBankruptcy(p)) {
+                showModal(t.n, `Taxa obrigatória: M$ ${t.val}`, [{t: "PAGAR", c: "#000", f: checkDoubleTurn}]);
+            }
         } else if(t.type === "luck" || t.type === "chest") {
             handleLuck(t.type);
         } else checkDoubleTurn();
+    }
+
+    function checkBankruptcy(p) {
+        if (p.money < 0) {
+            log(p, "FALIDO! Saiu do jogo.");
+            showModal("FALÊNCIA", `${p.name} faliu!`, [{
+                t: "SAIR", c: "var(--danger)", f: () => {
+                    TILES.forEach(t => { if(t.owner === p) { t.owner = null; t.houses = 0; t.mortgaged = false; }});
+                    const idx = players.indexOf(p);
+                    players.splice(idx, 1);
+                    if(players.length === 1) {
+                        showModal("VITÓRIA", `${players[0].name} VENCEU!`, [{t: "RECOMEÇAR", c: "var(--gold)", f: () => location.reload()}]);
+                    } else {
+                        turn = turn % players.length;
+                        nextTurn();
+                    }
+                }
+            }]);
+            return true;
+        }
+        return false;
+    }
+
+    function handleLuck(type) {
+        const p = players[turn];
+        const cards = [
+            {m: "Erro do banco: Receba M$ 200", v: 200},
+            {m: "Multa: Pague M$ 50", v: -50},
+            {m: "Sorte: Receba M$ 100", v: 100},
+            {m: "Hospital: Pague M$ 100", v: -100}
+        ];
+        const c = cards[Math.floor(Math.random()*cards.length)];
+        p.money += c.v;
+        if (!checkBankruptcy(p)) {
+            showModal(type === "luck" ? "SORTE" : "COFRE", c.m, [{t: "OK", c: "var(--info)", f: checkDoubleTurn}]);
+        }
+    }
+
+    function goToJail(p, reason) {
+        p.pos = 10; p.jailTurns = 3; doublesCount = 0;
+        updatePawns();
+        log(p, reason);
+        // CORREÇÃO: Usando string correta para a cor do CSS
+        showModal("PRISÃO", reason, [{t: "IR PARA CADEIA", c: "var(--danger)", f: nextTurn}]);
     }
 
     function calcRent(t, dice) {
@@ -315,31 +363,10 @@
 
     function buyProp(p, t) {
         if(p.money >= t.p) {
-            p.money -= t.p; t.owner = p; p.props.push(p.pos);
+            p.money -= t.p; t.owner = p; p.props.push(TILES.indexOf(t));
             sfx(800); log(p, `Comprou ${t.n}`);
             checkDoubleTurn();
         } else alert("Dinheiro insuficiente!");
-    }
-
-    function goToJail(p, reason) {
-        p.pos = 10; p.jailTurns = 3; doublesCount = 0;
-        updatePawns();
-        log(p, reason);
-        // CORREÇÃO: Usando string "var(--danger)" corretamente
-        showModal("PRISÃO", reason, [{t: "IR PARA CADEIA", c: "var(--danger)", f: nextTurn}]);
-    }
-
-    function handleLuck(type) {
-        const p = players[turn];
-        const cards = [
-            {m: "Erro do banco a seu favor: Receba M$ 200", v: 200},
-            {m: "Multa por excesso de velocidade: Pague M$ 50", v: -50},
-            {m: "Sua apólice venceu: Receba M$ 100", v: 100},
-            {m: "Despesas hospitalares: Pague M$ 100", v: -100}
-        ];
-        const c = cards[Math.floor(Math.random()*cards.length)];
-        p.money += c.v;
-        showModal(type === "luck" ? "SORTE" : "COFRE", c.m, [{t: "OK", c: "var(--info)", f: checkDoubleTurn}]);
     }
 
     function checkDoubleTurn() {
@@ -367,7 +394,7 @@
             h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding:10px; background:#f1f5f9; border-radius:12px">
                     <div style="font-size:13px"><b>${t.n}</b><br>Aluguel: M$ ${calcRent(t, 7)} ${t.mortgaged?'<span class="mortgage-tag">HIPOT.</span>':''}</div>
                     <div style="display:flex; gap:5px">
-                        ${(t.g && !t.mortgaged)?`<button onclick="                        buildHouse(${idx})" style="padding:6px; background:#22c55e; border:none; border-radius:6px; color:white">🏠</button>`:''}
+                        ${(t.g && !t.mortgaged)?`<button onclick="buildHouse(${idx})" style="padding:6px; background:#22c55e; border:none; border-radius:6px; color:white">🏠</button>`:''}
                         <button onclick="toggleMortgage(${idx})" style="padding:6px; background:#64748b; border:none; border-radius:6px; color:white">${t.mortgaged?'🔓':'🏦'}</button>
                     </div>
                   </div>`;
@@ -377,8 +404,7 @@
 
     function buildHouse(idx) {
         const p = players[turn]; const t = TILES[idx];
-        if(housesThisTurn >= 4) return alert("Limite de 4 por turno!");
-        if(t.houses === 4 && housesThisTurn > 0) return alert("Hotéis só no próximo turno!");
+        if(housesThisTurn >= 4) return alert("Limite de 4 casas por turno!");
         if((t.houses || 0) < 5 && p.money >= t.h) {
             p.money -= t.h; t.houses = (t.houses || 0) + 1; housesThisTurn++;
             updateVisualBuilds(); updateUI(); showAssets();
@@ -388,8 +414,7 @@
     function toggleMortgage(idx) {
         const p = players[turn]; const t = TILES[idx];
         if(!t.mortgaged) {
-            t.mortgaged = true; p.money += (t.p / 2);
-            log(p, `Hipotecou ${t.n}`);
+            t.mortgaged = true; p.money += (t.p / 2); log(p, `Hipotecou ${t.n}`);
         } else {
             let cost = Math.floor((t.p / 2) * 1.1);
             if(p.money >= cost) { p.money -= cost; t.mortgaged = false; log(p, `Deshipotecou ${t.n}`); }
@@ -397,7 +422,6 @@
         updateUI(); showAssets();
     }
 
-    // --- RENDERIZADORES ---
     function updatePawns() {
         players.forEach(p => {
             const tile = document.getElementById(`tile-${p.pos}`);
